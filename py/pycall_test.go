@@ -46,11 +46,27 @@ func TestPythonCall(t *testing.T) {
 					})
 				})
 
+				Convey("And when call int-int function with Call method", func() {
+					actual, err := mdl.Call("tenTimes", data.Int(4))
+					Convey("Then function should return valid result", func() {
+						So(err, ShouldBeNil)
+						So(actual, ShouldEqual, data.Int(40))
+					})
+				})
+
 				Convey("And when call none-string function", func() {
 					actual, err := mdl.CallNoneString("logger")
 					Convey("Then function should return valid result", func() {
 						So(err, ShouldBeNil)
 						So(actual, ShouldEqual, "called")
+					})
+				})
+
+				Convey("And when call none-string function with Call", func() {
+					actual, err := mdl.Call("logger")
+					Convey("Then function should return valid result", func() {
+						So(err, ShouldBeNil)
+						So(actual, ShouldEqual, data.String("called"))
 					})
 				})
 
@@ -76,10 +92,10 @@ func TestPythonCall(t *testing.T) {
 					var out []byte
 					enc := codec.NewEncoderBytes(&out, h)
 
-					data := []float32{1.1, 1.2, 1.3, 1.4, 1.5}
+					dat := []float32{1.1, 1.2, 1.3, 1.4, 1.5}
 					data2 := []int{9, 8, 7., 6, 5}
 					ds := map[string]interface{}{}
-					ds["data"] = data
+					ds["data"] = dat
 					ds["target"] = data2
 					ds["model"] = []byte{}
 					err := enc.Encode(ds)
@@ -110,14 +126,23 @@ func TestPythonCall(t *testing.T) {
 							enc2 := codec.NewEncoderBytes(&out2, h)
 							err = enc2.Encode(ds2)
 							So(err, ShouldBeNil)
-							actual2, err := mdl.CallByteByte("loadMsgPack", out2)
 
 							Convey("Then function should return model again", func() {
+								actual2, err := mdl.CallByteByte("loadMsgPack", out2)
 								So(err, ShouldBeNil)
 								So(len(actual2), ShouldNotEqual, 0)
 								So(string(actual2), ShouldResemble,
 									"\x82\xa5model\xae\x80\x02U\aTEST_req\x00.\xa3log\xa4done")
 
+							})
+
+							Convey("Then function should return model again with Call", func() {
+								actual2, err := mdl.Call("loadMsgPack", data.Blob(out2))
+								So(err, ShouldBeNil)
+								dat, err := data.AsString(actual2)
+								So(err, ShouldBeNil)
+								So(string(dat), ShouldResemble,
+									"\x82\xa5model\xae\x80\x02U\aTEST_req\x00.\xa3log\xa4done")
 							})
 						})
 					})
@@ -129,10 +154,25 @@ func TestPythonCall(t *testing.T) {
 						"int":    data.Int(9),
 						"byte":   data.Blob([]byte("ABC")),
 					}
+
 					actual, err := mdl.CallMapString("dict", arg)
 					Convey("Then function should return valid values", func() {
 						So(err, ShouldBeNil)
 						So(actual, ShouldEqual, "test9ABC")
+					})
+				})
+
+				Convey("And when call dictionary argument function with Call", func() {
+					arg := data.Map{
+						"string": data.String("test"),
+						"int":    data.Int(8),
+						"byte":   data.Blob([]byte("ABC")),
+					}
+
+					actual, err := mdl.Call("dict", arg)
+					Convey("Then function should return valid values", func() {
+						So(err, ShouldBeNil)
+						So(actual, ShouldEqual, data.String("test8ABC"))
 					})
 				})
 			})

@@ -196,6 +196,33 @@ func (m *ObjectModule) CallByteByte(name string, b []byte) ([]byte, error) {
 	return C.GoBytes(unsafe.Pointer(charPtr), C.int(l)), nil
 }
 
+// Call calls `name` function.
+//  argument type: ...data.Value
+//  return type:   data.Value
+func (m *ObjectModule) Call(name string, args ...data.Value) (data.Value, error) {
+	var res data.Value
+	pyFunc, err := m.getPyFunc(name)
+	if err != nil {
+		return res, fmt.Errorf("%v at '%v'", err.Error(), name)
+	}
+	defer pyFunc.DecRef()
+
+	pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
+	defer C.Py_DecRef(pyArg)
+
+	for i, v := range args {
+		o := newPyObj(v)
+		C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
+	}
+
+	ret, err := pyFunc.CallObject(Object{p: pyArg})
+	if ret.p == nil && err != nil {
+		return res, fmt.Errorf("%v in '%v'", err.Error(), name)
+	}
+
+	return fromPyTypeObject(ret.p), nil
+}
+
 func (m *ObjectModule) getPyFunc(name string) (ObjectFunc, error) {
 	cFunc := C.CString(name)
 	defer C.free(unsafe.Pointer(cFunc))
