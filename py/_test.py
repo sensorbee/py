@@ -36,3 +36,7 @@ def loadMsgPack(row):
 
     packed = msgpack.packb(retmap)
     return packed
+
+
+def dict(arg):
+    return arg['string'] + str(arg['int']) + str(arg['byte'])

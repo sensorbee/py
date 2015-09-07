@@ -3,6 +3,7 @@ package py
 import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/ugorji/go/codec"
+	"pfi/sensorbee/sensorbee/data"
 	"testing"
 )
 
@@ -119,6 +120,19 @@ func TestPythonCall(t *testing.T) {
 
 							})
 						})
+					})
+				})
+
+				Convey("And when call dictionary argument function", func() {
+					arg := data.Map{
+						"string": data.String("test"),
+						"int":    data.Int(9),
+						"byte":   data.Blob([]byte("ABC")),
+					}
+					actual, err := mdl.CallMapString("dict", arg)
+					Convey("Then function should return valid values", func() {
+						So(err, ShouldBeNil)
+						So(actual, ShouldEqual, "test9ABC")
 					})
 				})
 			})

@@ -53,10 +53,13 @@ func (m *ObjectModule) CallMapString(name string, ma data.Map) (
 	}
 	defer pyFunc.DecRef()
 
-	pyArg := newPyObj(ma)
-	defer pyArg.DecRef()
+	pyArg := C.PyTuple_New(1)
+	defer C.Py_DecRef(pyArg)
+	pyValue := newPyObj(ma)
+	defer pyValue.DecRef()
+	C.PyTuple_SetItem(pyArg, 0, pyValue.p)
 
-	ret, err := pyFunc.CallObject(pyArg)
+	ret, err := pyFunc.CallObject(Object{p: pyArg})
 	if ret.p == nil && err != nil {
 		return "", fmt.Errorf("%v in '%v'", err.Error(), name)
 	}

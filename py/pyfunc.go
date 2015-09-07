@@ -15,7 +15,7 @@ type ObjectFunc struct {
 }
 
 // CallObject executes python function, using `PyObject_CallObject`. Returns a
-// `PyObject` even if result values are more than one. When a value will be set
+// `PyObject` even if result values are more thane one. When a value will be set
 // directory, and values will be set as a `PyTuple` object.
 func (f *ObjectFunc) CallObject(arg Object) (po Object, err error) {
 	po = Object{}

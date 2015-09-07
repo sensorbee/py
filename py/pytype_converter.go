@@ -1,8 +1,13 @@
 package py
 
+/*
+#cgo darwin pkg-config: python-2.7
+#include "Python.h"
+*/
+import "C"
 import (
-	"fmt"
 	"pfi/sensorbee/sensorbee/data"
+	"unsafe"
 )
 
 func getNewPyDic(m map[string]interface{}) Object {
@@ -10,33 +15,42 @@ func getNewPyDic(m map[string]interface{}) Object {
 }
 
 func newPyObj(v data.Value) Object {
-	var result interface{}
+	var pyobj *C.PyObject
+	defer C.Py_DecRef(pyobj)
 	switch v.Type() {
 	case data.TypeBool:
-		result, _ = data.AsBool(v)
+		panic("not implemented!")
 	case data.TypeInt:
-		result, _ = data.AsInt(v)
+		i, _ := data.AsInt(v)
+		pyobj = C.PyInt_FromLong(C.long(i))
 	case data.TypeFloat:
-		result, _ = data.AsFloat(v)
+		panic("not implemented!")
 	case data.TypeString:
-		result, _ = data.AsString(v)
+		s, _ := data.AsString(v)
+		pyobj = newPyString(s)
 	case data.TypeBlob:
-		result, _ = data.AsBlob(v)
+		b, _ := data.AsBlob(v)
+		cb := (*C.char)(unsafe.Pointer(&b[0]))
+		pyobj = C.PyByteArray_FromStringAndSize(cb, C.Py_ssize_t(len(b)))
 	case data.TypeTimestamp:
-		result, _ = data.ToInt(v)
+		panic("not implemented!")
 	case data.TypeArray:
-		innerArray, _ := data.AsArray(v)
-		result = newPyArray(innerArray)
+		panic("not implemented!")
 	case data.TypeMap:
 		innerMap, _ := data.AsMap(v)
-		result = newPyMap(innerMap)
+		pyobj = newPyMap(innerMap)
 	case data.TypeNull:
-		result = nil
+		panic("not implemented!")
 	default:
-		//do nothing
+		panic("not implemented!")
 	}
-	fmt.Println(result)
-	return Object{}
+	return Object{p: pyobj}
+}
+
+func newPyString(s string) *C.PyObject {
+	cs := C.CString(s)
+	defer C.free(unsafe.Pointer(cs))
+	return C.PyString_FromString(cs)
 }
 
 func newPyArray(a data.Array) []interface{} {
@@ -48,11 +62,12 @@ func newPyArray(a data.Array) []interface{} {
 	return result
 }
 
-func newPyMap(m data.Map) interface{} {
-	result := map[string]interface{}{}
+func newPyMap(m data.Map) *C.PyObject {
+	pydict := C.PyDict_New()
 	for k, v := range m {
+		key := newPyString(k)
 		value := newPyObj(v)
-		result[k] = value
+		C.PyDict_SetItem(pydict, key, value.p)
 	}
-	return result
+	return pydict
 }
