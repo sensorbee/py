@@ -23,12 +23,18 @@ func TestConvertGo2PyObject(t *testing.T) {
 			arg := data.Map{
 				"string": data.String("test"),
 				"int":    data.Int(5),
+				"float":  data.Float(0.1),
 				"byte":   data.Blob([]byte("ABC")),
+				"bool":   data.True,
+				"null":   data.Null{},
+				"array": data.Array{
+					data.String("array-test"), data.Int(55),
+				},
 			}
-			actual, err := mdl.CallMapString("go2py", arg)
+			actual, err := mdl.Call("go2py", arg)
 			Convey("Then function should return valid values", func() {
 				So(err, ShouldBeNil)
-				So(actual, ShouldEqual, "test5ABC")
+				So(actual, ShouldEqual, "test_5_0.1_ABC_True_None_array-test_55")
 			})
 		})
 	})
