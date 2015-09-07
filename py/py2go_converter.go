@@ -46,7 +46,7 @@ func fromPyMap(o *C.PyObject) data.Map {
 		if key.ob_type != &C.PyString_Type {
 			continue
 		}
-		key := fromPyTypeObject(key).String()
+		key, _ := data.ToString(fromPyTypeObject(key))
 		m[key] = fromPyTypeObject(value)
 	}
 
