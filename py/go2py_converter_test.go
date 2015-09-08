@@ -36,6 +36,7 @@ func TestConvertGo2PyObject(t *testing.T) {
 				"null":   argAndExpected{data.Null{}, "None"},
 			}
 			for k, v := range values {
+				v := v
 				msg := fmt.Sprintf("Then function should return string value: %v", k)
 				Convey(msg, func() {
 					actual, err := mdl.Call("go2py_tostr", v.arg)
