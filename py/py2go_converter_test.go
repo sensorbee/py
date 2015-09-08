@@ -24,10 +24,16 @@ func TestConvertPyObject2Go(t *testing.T) {
 			typeName string
 			expected data.Value
 		}{
+			{"true", data.Bool(true)},
+			{"false", data.Bool(false)},
 			{"int", data.Int(123)},
+			{"float", data.Float(1.0)},
 			{"string", data.String("ABC")},
 			{"bytearray", data.Blob([]byte("abcdefg"))},
 			{"map", data.Map{"key1": data.Int(123), "key2": data.String("str")}},
+			{"nested_map", data.Map{"key1": data.Map{"key2": data.Int(123)}}},
+			{"array", data.Array{data.Int(1), data.Int(2), data.Map{"key": data.Int(3)}}},
+			{"none", data.Null{}},
 		}
 
 		for _, r := range returnTypes {
@@ -41,14 +47,5 @@ func TestConvertPyObject2Go(t *testing.T) {
 				})
 			})
 		}
-
-		Convey("When calling a function that returns nested map", func() {
-			actual, err := mdl.Call("return_nested_map")
-			So(err, ShouldBeNil)
-
-			Convey("Then the function should return valid value", func() {
-				So(actual, ShouldResemble, data.Map{"key1": data.Map{"key2": data.Int(123)}})
-			})
-		})
 	})
 }

@@ -12,8 +12,19 @@ import (
 
 func fromPyTypeObject(o *C.PyObject) data.Value {
 	switch {
+	// FIXME: this internal code should not use
+	case o == (*C.PyObject)(unsafe.Pointer(&C._Py_TrueStruct)):
+		return data.Bool(true)
+
+	// FIXME: this internal code should not use
+	case o == (*C.PyObject)(unsafe.Pointer(&C._Py_ZeroStruct)):
+		return data.Bool(false)
+
 	case o.ob_type == &C.PyInt_Type:
 		return data.Int(C.PyInt_AsLong(o))
+
+	case o.ob_type == &C.PyFloat_Type:
+		return data.Float(C.PyFloat_AsDouble(o))
 
 	case o.ob_type == &C.PyByteArray_Type:
 		bytePtr := C.PyByteArray_FromObject(o)
@@ -26,13 +37,30 @@ func fromPyTypeObject(o *C.PyObject) data.Value {
 		charPtr := C.PyString_AsString(o)
 		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size)))
 
+	case o.ob_type == &C.PyList_Type:
+		return fromPyArray(o)
+
 	case o.ob_type == &C.PyDict_Type:
 		return fromPyMap(o)
 
-	}
-	// TODO: implement other types
+	// FIXME: this internal code should not use
+	case o == &C._Py_NoneStruct:
+		return data.Null{}
 
-	return nil
+	}
+	// TODO: implement timestamp
+
+	return data.Null{}
+}
+
+func fromPyArray(ls *C.PyObject) data.Array {
+	size := int(C.PyList_Size(ls))
+	array := make(data.Array, size)
+	for i := 0; i < size; i++ {
+		o := C.PyList_GetItem(ls, C.Py_ssize_t(i))
+		array[i] = fromPyTypeObject(o)
+	}
+	return array
 }
 
 func fromPyMap(o *C.PyObject) data.Map {
