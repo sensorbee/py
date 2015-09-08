@@ -3,17 +3,30 @@ package py
 /*
 #cgo darwin pkg-config: python-2.7
 #include "Python.h"
+#include "datetime.h"
 */
 import "C"
 import (
 	"pfi/sensorbee/sensorbee/data"
+	"time"
 	"unsafe"
 )
 
 func fromPyTypeObject(o *C.PyObject) data.Value {
 	switch {
+	// FIXME: this internal code should not use
+	case o == (*C.PyObject)(unsafe.Pointer(&C._Py_TrueStruct)):
+		return data.Bool(true)
+
+	// FIXME: this internal code should not use
+	case o == (*C.PyObject)(unsafe.Pointer(&C._Py_ZeroStruct)):
+		return data.Bool(false)
+
 	case o.ob_type == &C.PyInt_Type:
 		return data.Int(C.PyInt_AsLong(o))
+
+	case o.ob_type == &C.PyFloat_Type:
+		return data.Float(C.PyFloat_AsDouble(o))
 
 	case o.ob_type == &C.PyByteArray_Type:
 		bytePtr := C.PyByteArray_FromObject(o)
@@ -26,13 +39,39 @@ func fromPyTypeObject(o *C.PyObject) data.Value {
 		charPtr := C.PyString_AsString(o)
 		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size)))
 
+	case pyDateTimeCheckExact(o):
+		// FIXME: this internal code should not use
+		// TODO: consider time zone
+		d := (*C.PyDateTime_DateTime)(unsafe.Pointer(o))
+		t := time.Date(int(d.data[0])<<8|int(d.data[1]), time.Month(int(d.data[2])+1),
+			int(d.data[3]), int(d.data[4]), int(d.data[5]), int(d.data[6]),
+			(int(d.data[7])<<16|int(d.data[8])<<8|int(d.data[9]))*1000,
+			time.UTC)
+		return data.Timestamp(t)
+
+	case o.ob_type == &C.PyList_Type:
+		return fromPyArray(o)
+
 	case o.ob_type == &C.PyDict_Type:
 		return fromPyMap(o)
 
-	}
-	// TODO: implement other types
+	// FIXME: this internal code should not use
+	case o == &C._Py_NoneStruct:
+		return data.Null{}
 
-	return nil
+	}
+
+	return data.Null{}
+}
+
+func fromPyArray(ls *C.PyObject) data.Array {
+	size := int(C.PyList_Size(ls))
+	array := make(data.Array, size)
+	for i := 0; i < size; i++ {
+		o := C.PyList_GetItem(ls, C.Py_ssize_t(i))
+		array[i] = fromPyTypeObject(o)
+	}
+	return array
 }
 
 func fromPyMap(o *C.PyObject) data.Map {
@@ -46,7 +85,7 @@ func fromPyMap(o *C.PyObject) data.Map {
 		if key.ob_type != &C.PyString_Type {
 			continue
 		}
-		key := fromPyTypeObject(key).String()
+		key, _ := data.ToString(fromPyTypeObject(key))
 		m[key] = fromPyTypeObject(value)
 	}
 
