@@ -44,3 +44,18 @@ def return_none():
 
 def return_timestamp():
     return datetime.datetime(2015, 4, 1, 14, 27, 0, 500*1000, None)
+
+
+class TEST_TZ(datetime.tzinfo):
+    def utcoffset(self, dt):
+        return datetime.timedelta(hours=9, minutes=3)
+
+    def dst(self, dt):
+        return datetime.timedelta(0)
+
+    def tzname(self, dt):
+        return 'TEST'
+
+
+def return_timestamp_with_tz():
+    return datetime.datetime(2015, 4, 1, 14, 27, 0, 500*1000, TEST_TZ())

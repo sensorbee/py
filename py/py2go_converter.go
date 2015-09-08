@@ -40,14 +40,7 @@ func fromPyTypeObject(o *C.PyObject) data.Value {
 		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size)))
 
 	case pyDateTimeCheckExact(o):
-		// FIXME: this internal code should not use
-		// TODO: consider time zone
-		d := (*C.PyDateTime_DateTime)(unsafe.Pointer(o))
-		t := time.Date(int(d.data[0])<<8|int(d.data[1]), time.Month(int(d.data[2])+1),
-			int(d.data[3]), int(d.data[4]), int(d.data[5]), int(d.data[6]),
-			(int(d.data[7])<<16|int(d.data[8])<<8|int(d.data[9]))*1000,
-			time.UTC)
-		return data.Timestamp(t)
+		return fromTimestamp(o)
 
 	case o.ob_type == &C.PyList_Type:
 		return fromPyArray(o)
@@ -90,4 +83,52 @@ func fromPyMap(o *C.PyObject) data.Map {
 	}
 
 	return m
+}
+
+func fromTimestamp(o *C.PyObject) data.Timestamp {
+	// FIXME: this internal code should not use
+	d := (*C.PyDateTime_DateTime)(unsafe.Pointer(o))
+	t := time.Date(int(d.data[0])<<8|int(d.data[1]), time.Month(int(d.data[2])+1),
+		int(d.data[3]), int(d.data[4]), int(d.data[5]), int(d.data[6]),
+		(int(d.data[7])<<16|int(d.data[8])<<8|int(d.data[9]))*1000,
+		time.UTC)
+
+	if d.hastzinfo <= 0 {
+		return data.Timestamp(t)
+	}
+
+	return fromTimestampWithTimezone(o, t)
+}
+
+// fromTimestampWithTimezone converts into data.Timestamp with UTC time zone
+// from datetime with tzinfo.  All of datetime passed to Go from Python API
+// must be unified into UTC time zone by this function.
+//
+// This function calls `utcoffset` method to acrquire offset from UTC for
+// adjusting time zone.
+func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
+	m := ObjectModule{Object{p: o}}
+	pyFunc, err := m.getPyFunc("utcoffset")
+	if err != nil {
+		// Cannot get `utcoffset` function
+		return data.Timestamp(t)
+	}
+	defer pyFunc.DecRef()
+
+	ret, err := pyFunc.CallObject(Object{})
+	if ret.p == nil && err != nil {
+		// Failed to execute `utcoffset` function
+		return data.Timestamp(t)
+	}
+
+	if !pyTimeDeltaCheckExact(ret.p) {
+		// Cannot get `datetime.timedelta` instance
+		return data.Timestamp(t)
+	}
+
+	// Adjust for time zone
+	delta := (*C.PyDateTime_Delta)(unsafe.Pointer(ret.p))
+	t = t.AddDate(0, 0, -int(delta.days))
+	t = t.Add(time.Duration(-delta.seconds)*time.Second + time.Duration(-delta.microseconds)*time.Microsecond)
+	return data.Timestamp(t)
 }

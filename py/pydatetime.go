@@ -17,6 +17,10 @@ PyObject* GetPyDateTime(int year, int month, int day, int hour, int minute,
                         int second, int us) {
   return PyDateTime_FromDateAndTime(year, month, day, hour, minute, second, us);
 }
+
+int PyTimeDeltaCheckExact(PyObject* o) {
+  return PyDelta_CheckExact(o);
+}
 */
 import "C"
 import (
@@ -35,4 +39,8 @@ func getPyDateTime(t time.Time) *C.PyObject {
 	us := int(t.Nanosecond() / 1e3)
 	return C.GetPyDateTime(C.int(t.Year()), C.int(t.Month()), C.int(t.Day()),
 		C.int(t.Hour()), C.int(t.Minute()), C.int(t.Second()), C.int(us))
+}
+
+func pyTimeDeltaCheckExact(o *C.PyObject) bool {
+	return C.PyTimeDeltaCheckExact(o) > 0
 }
