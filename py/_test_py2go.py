@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import datetime
 
 def return_true():
     return True
@@ -29,3 +30,6 @@ def return_nested_map():
 
 def return_none():
     return None
+
+def return_timestamp():
+    return datetime.datetime(2015, 4, 1, 14, 27, 0, 500*1000, None)

@@ -3,10 +3,12 @@ package py
 /*
 #cgo darwin pkg-config: python-2.7
 #include "Python.h"
+#include "datetime.h"
 */
 import "C"
 import (
 	"pfi/sensorbee/sensorbee/data"
+	"time"
 	"unsafe"
 )
 
@@ -37,6 +39,16 @@ func fromPyTypeObject(o *C.PyObject) data.Value {
 		charPtr := C.PyString_AsString(o)
 		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size)))
 
+	case pyDateTimeCheckExact(o):
+		// FIXME: this internal code should not use
+		// TODO: consider time zone
+		d := (*C.PyDateTime_DateTime)(unsafe.Pointer(o))
+		t := time.Date(int(d.data[0])<<8|int(d.data[1]), time.Month(int(d.data[2])+1),
+			int(d.data[3]), int(d.data[4]), int(d.data[5]), int(d.data[6]),
+			(int(d.data[7])<<16|int(d.data[8])<<8|int(d.data[9]))*1000,
+			time.UTC)
+		return data.Timestamp(t)
+
 	case o.ob_type == &C.PyList_Type:
 		return fromPyArray(o)
 
@@ -48,7 +60,6 @@ func fromPyTypeObject(o *C.PyObject) data.Value {
 		return data.Null{}
 
 	}
-	// TODO: implement timestamp
 
 	return data.Null{}
 }

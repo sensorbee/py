@@ -5,6 +5,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"pfi/sensorbee/sensorbee/data"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -34,6 +35,7 @@ func TestConvertPyObject2Go(t *testing.T) {
 			{"nested_map", data.Map{"key1": data.Map{"key2": data.Int(123)}}},
 			{"array", data.Array{data.Int(1), data.Int(2), data.Map{"key": data.Int(3)}}},
 			{"none", data.Null{}},
+			{"timestamp", data.Timestamp(time.Date(2015, time.May, 1, 14, 27, 0, 500*int(time.Millisecond), time.UTC))},
 		}
 
 		for _, r := range returnTypes {
