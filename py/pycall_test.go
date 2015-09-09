@@ -189,6 +189,13 @@ func TestPythonInstanceCall(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 
+		Convey("When get a invalid class instance", func() {
+			_, err := mdl.GetInstance("NonexistentClass")
+			Convey("Then an error should be occurred", func() {
+				So(err, ShouldNotBeNil)
+			})
+		})
+
 		Convey("When get a new test python instance", func() {
 			ins, err := mdl.GetInstance("PythonTest")
 			defer ins.DecRef()
