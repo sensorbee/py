@@ -5,6 +5,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"pfi/sensorbee/sensorbee/data"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -26,6 +27,8 @@ func TestConvertGo2PyObject(t *testing.T) {
 		}
 
 		Convey("When set an object", func() {
+			now := time.Now()
+			nowStr := now.Format("2006-01-02 15:04:05.999999")
 			values := map[string]argAndExpected{
 				"string": argAndExpected{data.String("test"), "test"},
 				"int":    argAndExpected{data.Int(9), "9"},
@@ -33,6 +36,7 @@ func TestConvertGo2PyObject(t *testing.T) {
 				"byte":   argAndExpected{data.Blob([]byte("ABC")), "ABC"},
 				"true":   argAndExpected{data.True, "True"},
 				"false":  argAndExpected{data.False, "False"},
+				"time":   argAndExpected{data.Timestamp(now), nowStr},
 				"null":   argAndExpected{data.Null{}, "None"},
 			}
 			for k, v := range values {

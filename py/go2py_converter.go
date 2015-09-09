@@ -35,12 +35,8 @@ func newPyObj(v data.Value) Object {
 		cb := (*C.char)(unsafe.Pointer(&b[0]))
 		pyobj = C.PyByteArray_FromStringAndSize(cb, C.Py_ssize_t(len(b)))
 	case data.TypeTimestamp:
-		// t, _ := data.AsTimestamp(v)
-		// usecond := int(t.Nanosecond() / 1e3)
-		// pyobj = C.PyDateTime_FromDateAndTime(C.int(t.Year()), C.int(t.Month()),
-		// 	C.int(t.Day()), C.int(t.Hour()), C.int(t.Minute()), C.int(t.Second()),
-		// 	C.int(us))
-		panic("not implemented!")
+		t, _ := data.AsTimestamp(v)
+		pyobj = getPyDateTime(t)
 	case data.TypeArray:
 		innerArray, _ := data.AsArray(v)
 		pyobj = newPyArray(innerArray)
