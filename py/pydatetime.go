@@ -13,6 +13,10 @@ int PyDateTimeCheckExact(PyObject* o) {
   return PyDateTime_CheckExact(o);
 }
 
+int PyTimeDeltaCheckExact(PyObject* o) {
+  return PyDelta_CheckExact(o);
+}
+
 PyObject* GetPyDateTime(int year, int month, int day, int hour, int minute,
                         int second, int us) {
   return PyDateTime_FromDateAndTime(year, month, day, hour, minute, second, us);
@@ -29,6 +33,10 @@ func init() {
 
 func pyDateTimeCheckExact(o *C.PyObject) bool {
 	return C.PyDateTimeCheckExact(o) > 0
+}
+
+func pyTimeDeltaCheckExact(o *C.PyObject) bool {
+	return C.PyTimeDeltaCheckExact(o) > 0
 }
 
 func getPyDateTime(t time.Time) *C.PyObject {
