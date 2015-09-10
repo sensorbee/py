@@ -36,7 +36,11 @@ func (m *ObjectModule) GetInstance(name string) (ObjectModule, error) {
 	defer C.free(unsafe.Pointer(cName))
 
 	pyInstance := C.PyObject_GetAttrString(m.p, cName)
+	if pyInstance == nil {
+		return ObjectModule{}, fmt.Errorf("cannot create '%v' instance", name)
+	}
 	defer C.Py_DecRef(pyInstance)
+
 	// get constructor (called `__init__(self)`)
 	ret := C.PyObject_CallObject(pyInstance, nil)
 	return ObjectModule{Object{p: ret}}, nil
