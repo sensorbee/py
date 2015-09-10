@@ -16,7 +16,6 @@ func getNewPyDic(m map[string]interface{}) Object {
 
 func newPyObj(v data.Value) Object {
 	var pyobj *C.PyObject
-	defer C.Py_DecRef(pyobj)
 	switch v.Type() {
 	case data.TypeBool:
 		b, _ := data.ToInt(v)
