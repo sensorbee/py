@@ -31,7 +31,7 @@ func LoadModule(name string) (ObjectModule, error) {
 }
 
 // GetInstance returns `name` constructor.
-func (m *ObjectModule) GetInstance(name string) (ObjectModule, error) {
+func (m *ObjectModule) GetInstance(name string, args ...data.Value) (ObjectModule, error) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -41,8 +41,16 @@ func (m *ObjectModule) GetInstance(name string) (ObjectModule, error) {
 	}
 	defer C.Py_DecRef(pyInstance)
 
+	pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
+	defer C.Py_DecRef(pyArg)
+
+	for i, v := range args {
+		o := newPyObj(v)
+		C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
+	}
+
 	// get constructor (called `__init__(self)`)
-	ret := C.PyObject_CallObject(pyInstance, nil)
+	ret := C.PyObject_CallObject(pyInstance, pyArg)
 	return ObjectModule{Object{p: ret}}, nil
 }
 

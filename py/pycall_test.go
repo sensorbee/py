@@ -246,5 +246,45 @@ func TestPythonInstanceCall(t *testing.T) {
 				ins.DecRef()
 			})
 		})
+
+		Convey("When get a new test python instance with param", func() {
+			params := data.String("python_test")
+			ins, err := mdl.GetInstance("PythonTest2", params)
+
+			Convey("Then process should get instance and set values", func() {
+				So(err, ShouldBeNil)
+				So(ins, ShouldNotBeNil)
+
+				actual, err := ins.Call("get_a")
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "python_test")
+
+				Convey("And when get another python instance with param", func() {
+					params2 := data.String("python_test2")
+					ins2, err := mdl.GetInstance("PythonTest2", params2)
+
+					Convey("Then process should get another instance and set values", func() {
+						So(err, ShouldBeNil)
+						So(ins2, ShouldNotBeNil)
+
+						actual2, err := ins2.Call("get_a")
+						So(err, ShouldBeNil)
+						So(actual2, ShouldEqual, "python_test2")
+
+						react, err := ins.Call("get_a")
+						So(err, ShouldBeNil)
+						So(react, ShouldEqual, "python_test")
+
+					})
+					Reset(func() {
+						ins2.DecRef()
+					})
+				})
+			})
+
+			Reset(func() {
+				ins.DecRef()
+			})
+		})
 	})
 }
