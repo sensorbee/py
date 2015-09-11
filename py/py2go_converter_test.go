@@ -17,7 +17,6 @@ func TestConvertPyObject2Go(t *testing.T) {
 		ImportSysAndAppendPath("")
 
 		mdl, err := LoadModule("_test_py2go")
-		defer mdl.DecRef()
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 
@@ -50,5 +49,9 @@ func TestConvertPyObject2Go(t *testing.T) {
 				})
 			})
 		}
+
+		Reset(func() {
+			mdl.DecRef()
+		})
 	})
 }

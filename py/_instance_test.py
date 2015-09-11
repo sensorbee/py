@@ -11,3 +11,12 @@ class PythonTest():
     def logger(self, s):
         self.a += '_' + s
         return self.a
+
+
+class PythonTest2(object):
+
+    def __init__(self, s):
+        self.a = s
+
+    def get_a(self):
+        return self.a

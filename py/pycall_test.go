@@ -26,10 +26,12 @@ func TestPythonCall(t *testing.T) {
 		})
 		Convey("When get valid module", func() {
 			mdl, err := LoadModule("_test")
-			defer mdl.DecRef()
 			Convey("Then process should get PyModule", func() {
 				So(err, ShouldBeNil)
 				So(mdl, ShouldNotBeNil)
+				Reset(func() {
+					mdl.DecRef()
+				})
 
 				Convey("And when call invalid function", func() {
 					_, err := mdl.CallIntInt("notFoundMethod", 1)
@@ -198,10 +200,12 @@ func TestPythonInstanceCall(t *testing.T) {
 
 		Convey("When get a new test python instance", func() {
 			ins, err := mdl.GetInstance("PythonTest")
-			defer ins.DecRef()
 			Convey("Then process should get PyModule", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
+				Reset(func() {
+					ins.DecRef()
+				})
 
 				Convey("And when call a logger function", func() {
 					actual, err := ins.CallStringString("logger", "test")
@@ -219,10 +223,12 @@ func TestPythonInstanceCall(t *testing.T) {
 
 						Convey("And when get a new test python instance", func() {
 							ins2, err := mdl.GetInstance("PythonTest")
-							defer ins2.DecRef()
 							Convey("Then process should get PyModule", func() {
 								So(err, ShouldBeNil)
 								So(ins2, ShouldNotBeNil)
+								Reset(func() {
+									ins2.DecRef()
+								})
 
 								Convey("And when call a logger function", func() {
 									actual3, err1 := ins.CallStringString("logger", "t")
@@ -236,6 +242,45 @@ func TestPythonInstanceCall(t *testing.T) {
 								})
 							})
 						})
+					})
+				})
+			})
+		})
+
+		Convey("When get a new test python instance with param", func() {
+			params := data.String("python_test")
+			ins, err := mdl.GetInstance("PythonTest2", params)
+
+			Convey("Then process should get instance and set values", func() {
+				So(err, ShouldBeNil)
+				So(ins, ShouldNotBeNil)
+				Reset(func() {
+					ins.DecRef()
+				})
+
+				actual, err := ins.Call("get_a")
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "python_test")
+
+				Convey("And when get another python instance with param", func() {
+					params2 := data.String("python_test2")
+					ins2, err := mdl.GetInstance("PythonTest2", params2)
+
+					Convey("Then process should get another instance and set values", func() {
+						So(err, ShouldBeNil)
+						So(ins2, ShouldNotBeNil)
+						Reset(func() {
+							ins2.DecRef()
+						})
+
+						actual2, err := ins2.Call("get_a")
+						So(err, ShouldBeNil)
+						So(actual2, ShouldEqual, "python_test2")
+
+						react, err := ins.Call("get_a")
+						So(err, ShouldBeNil)
+						So(react, ShouldEqual, "python_test")
+
 					})
 				})
 			})
