@@ -4,6 +4,42 @@ package py
 #cgo darwin pkg-config: python-2.7
 #include "Python.h"
 #include "datetime.h"
+
+int IsPyTypeTrue(PyObject *o) {
+  return o == Py_True;
+}
+
+int IsPyTypeFalse(PyObject *o) {
+  return o == Py_False;
+}
+
+int IsPyTypeInt(PyObject *o) {
+  return PyInt_CheckExact(o);
+}
+
+int IsPyTypeFloat(PyObject *o) {
+  return PyFloat_CheckExact(o);
+}
+
+int IsPyTypeByteArray(PyObject *o) {
+  return PyByteArray_CheckExact(o);
+}
+
+int IsPyTypeString(PyObject *o) {
+  return PyString_CheckExact(o);
+}
+
+int IsPyTypeList(PyObject *o) {
+  return PyList_CheckExact(o);
+}
+
+int IsPyTypeDict(PyObject *o) {
+  return PyDict_CheckExact(o);
+}
+
+int IsPyTypeNone(PyObject *o) {
+  return o == Py_None;
+}
 */
 import "C"
 import (
@@ -14,42 +50,39 @@ import (
 
 func fromPyTypeObject(o *C.PyObject) data.Value {
 	switch {
-	// FIXME: this internal code should not use
-	case o == (*C.PyObject)(unsafe.Pointer(&C._Py_TrueStruct)):
+	case C.IsPyTypeTrue(o) > 0:
 		return data.Bool(true)
 
-	// FIXME: this internal code should not use
-	case o == (*C.PyObject)(unsafe.Pointer(&C._Py_ZeroStruct)):
+	case C.IsPyTypeFalse(o) > 0:
 		return data.Bool(false)
 
-	case o.ob_type == &C.PyInt_Type:
+	case C.IsPyTypeInt(o) > 0:
 		return data.Int(C.PyInt_AsLong(o))
 
-	case o.ob_type == &C.PyFloat_Type:
+	case C.IsPyTypeFloat(o) > 0:
 		return data.Float(C.PyFloat_AsDouble(o))
 
-	case o.ob_type == &C.PyByteArray_Type:
+	case C.IsPyTypeByteArray(o) > 0:
 		bytePtr := C.PyByteArray_FromObject(o)
 		charPtr := C.PyByteArray_AsString(bytePtr)
 		l := C.PyByteArray_Size(o)
 		return data.Blob(C.GoBytes(unsafe.Pointer(charPtr), C.int(l)))
 
-	case o.ob_type == &C.PyString_Type:
+	case C.IsPyTypeString(o) > 0:
 		size := C.int(C.PyString_Size(o))
 		charPtr := C.PyString_AsString(o)
 		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size)))
 
-	case pyDateTimeCheckExact(o):
+	case IsPyTypeDateTime(o):
 		return fromTimestamp(o)
 
-	case o.ob_type == &C.PyList_Type:
+	case C.IsPyTypeList(o) > 0:
 		return fromPyArray(o)
 
-	case o.ob_type == &C.PyDict_Type:
+	case C.IsPyTypeDict(o) > 0:
 		return fromPyMap(o)
 
-	// FIXME: this internal code should not use
-	case o == &C._Py_NoneStruct:
+	case C.IsPyTypeNone(o) > 0:
 		return data.Null{}
 
 	}
@@ -121,7 +154,7 @@ func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
 		return data.Timestamp(t)
 	}
 
-	if !pyTimeDeltaCheckExact(ret.p) {
+	if !IsPyTypeTimeDelta(ret.p) {
 		// Cannot get `datetime.timedelta` instance
 		return data.Timestamp(t)
 	}
