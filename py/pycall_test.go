@@ -29,6 +29,9 @@ func TestPythonCall(t *testing.T) {
 			Convey("Then process should get PyModule", func() {
 				So(err, ShouldBeNil)
 				So(mdl, ShouldNotBeNil)
+				Reset(func() {
+					mdl.DecRef()
+				})
 
 				Convey("And when call invalid function", func() {
 					_, err := mdl.CallIntInt("notFoundMethod", 1)
@@ -175,9 +178,6 @@ func TestPythonCall(t *testing.T) {
 					})
 				})
 			})
-			Reset(func() {
-				mdl.DecRef()
-			})
 		})
 	})
 }
@@ -203,6 +203,9 @@ func TestPythonInstanceCall(t *testing.T) {
 			Convey("Then process should get PyModule", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
+				Reset(func() {
+					ins.DecRef()
+				})
 
 				Convey("And when call a logger function", func() {
 					actual, err := ins.CallStringString("logger", "test")
@@ -223,6 +226,9 @@ func TestPythonInstanceCall(t *testing.T) {
 							Convey("Then process should get PyModule", func() {
 								So(err, ShouldBeNil)
 								So(ins2, ShouldNotBeNil)
+								Reset(func() {
+									ins2.DecRef()
+								})
 
 								Convey("And when call a logger function", func() {
 									actual3, err1 := ins.CallStringString("logger", "t")
@@ -235,15 +241,9 @@ func TestPythonInstanceCall(t *testing.T) {
 									})
 								})
 							})
-							Reset(func() {
-								ins2.DecRef()
-							})
 						})
 					})
 				})
-			})
-			Reset(func() {
-				ins.DecRef()
 			})
 		})
 
@@ -254,6 +254,9 @@ func TestPythonInstanceCall(t *testing.T) {
 			Convey("Then process should get instance and set values", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
+				Reset(func() {
+					ins.DecRef()
+				})
 
 				actual, err := ins.Call("get_a")
 				So(err, ShouldBeNil)
@@ -266,6 +269,9 @@ func TestPythonInstanceCall(t *testing.T) {
 					Convey("Then process should get another instance and set values", func() {
 						So(err, ShouldBeNil)
 						So(ins2, ShouldNotBeNil)
+						Reset(func() {
+							ins2.DecRef()
+						})
 
 						actual2, err := ins2.Call("get_a")
 						So(err, ShouldBeNil)
@@ -276,14 +282,7 @@ func TestPythonInstanceCall(t *testing.T) {
 						So(react, ShouldEqual, "python_test")
 
 					})
-					Reset(func() {
-						ins2.DecRef()
-					})
 				})
-			})
-
-			Reset(func() {
-				ins.DecRef()
 			})
 		})
 	})
