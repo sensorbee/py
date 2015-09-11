@@ -19,8 +19,8 @@ import (
 	"unsafe"
 )
 
-// Initialize python interpreter and GIL.
-func Initialize() error {
+// initialize python interpreter and GIL.
+func initialize() error {
 	if C.Py_IsInitialized() == 0 {
 		C.Py_Initialize()
 	}

@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-func init() {
-	Initialize()
-}
-
 func TestConvertGo2PyObject(t *testing.T) {
 	Convey("Given an initialized python go2py test module", t, func() {
 		ImportSysAndAppendPath("")

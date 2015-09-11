@@ -34,7 +34,7 @@ func init() {
 
 	// PyDateTime_IMPORT requires python initialized interpreter and
 	// need to call Initialize.
-	if err := Initialize(); err != nil {
+	if err := initialize(); err != nil {
 		panic(err)
 	}
 

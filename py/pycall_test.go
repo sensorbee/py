@@ -6,12 +6,6 @@ import (
 	"testing"
 )
 
-func init() {
-	// goconvey is call same function several times, so in order to call
-	// `Initialize` only once, use `init`
-	Initialize()
-}
-
 func TestPythonInstanceCall(t *testing.T) {
 	Convey("Given an initialized python module", t, func() {
 
