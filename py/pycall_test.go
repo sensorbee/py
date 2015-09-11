@@ -26,7 +26,6 @@ func TestPythonCall(t *testing.T) {
 		})
 		Convey("When get valid module", func() {
 			mdl, err := LoadModule("_test")
-			defer mdl.DecRef()
 			Convey("Then process should get PyModule", func() {
 				So(err, ShouldBeNil)
 				So(mdl, ShouldNotBeNil)
@@ -176,6 +175,9 @@ func TestPythonCall(t *testing.T) {
 					})
 				})
 			})
+			Reset(func() {
+				mdl.DecRef()
+			})
 		})
 	})
 }
@@ -198,7 +200,6 @@ func TestPythonInstanceCall(t *testing.T) {
 
 		Convey("When get a new test python instance", func() {
 			ins, err := mdl.GetInstance("PythonTest")
-			defer ins.DecRef()
 			Convey("Then process should get PyModule", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
@@ -219,7 +220,6 @@ func TestPythonInstanceCall(t *testing.T) {
 
 						Convey("And when get a new test python instance", func() {
 							ins2, err := mdl.GetInstance("PythonTest")
-							defer ins2.DecRef()
 							Convey("Then process should get PyModule", func() {
 								So(err, ShouldBeNil)
 								So(ins2, ShouldNotBeNil)
@@ -235,9 +235,15 @@ func TestPythonInstanceCall(t *testing.T) {
 									})
 								})
 							})
+							Reset(func() {
+								ins2.DecRef()
+							})
 						})
 					})
 				})
+			})
+			Reset(func() {
+				ins.DecRef()
 			})
 		})
 	})

@@ -17,7 +17,6 @@ func TestConvertGo2PyObject(t *testing.T) {
 		ImportSysAndAppendPath("")
 
 		mdl, err := LoadModule("_test_go2py")
-		defer mdl.DecRef()
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 
@@ -81,6 +80,10 @@ func TestConvertGo2PyObject(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual, ShouldEqual, "test_55_inmap")
 			})
+		})
+
+		Reset(func() {
+			mdl.DecRef()
 		})
 	})
 }
