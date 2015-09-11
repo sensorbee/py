@@ -173,20 +173,18 @@ func getMNISTRawData(imagesDataName string, labelsDataName string, dataSize int,
 	return target, data, nil
 }
 
-// GenerateStream generates MNIST data stream. MNIST data is packed to binary
-// using msgpack. Before unpacked structure is `map[string]interface{}`, images
-// data is set with "data" key, and labels data is set with "target". The binary
-// data is set with "mnist" key in a tuple.
+// GenerateStream generates MNIST data stream.
 //
-// The MNIST data is randomized when random flag is true, a seed of randomizing
-// is not fixed. And the data is separated by batch size. When a images data
+// [TODO] The MNIST data is randomized when random flag is true, a seed of
+// randomizing is not fixed.
+// [TODO: delete] And the data is separated by batch size. When a images data
 // size is 60,000 and batch size is 100, then 600 (=60,000/100) tuples will be
 // generated. A batch counter is set "batch_count"  key in a tuple.
 //
 // Output:
 //  data.Map{
-//    "batch_count": [a count number of batch] (data.Int),
-//    "mnist":       [data separated by batch size] (data.Blob),
+//    "label": [correct data] (data.Int),
+//    "data":  [image data (28*28)] (data.Array),
 //  }
 func (s *mnistDataSource) GenerateStream(ctx *core.Context, w core.Writer) error {
 	perm := make([]int, s.dataSize, s.dataSize)
@@ -197,6 +195,7 @@ func (s *mnistDataSource) GenerateStream(ctx *core.Context, w core.Writer) error
 		ramdomPermutaion(perm)
 	}
 
+	// TODO support random
 	for i := 0; i < s.dataSize; i++ {
 		image := make(data.Array, len(s.data[i]))
 		for j, f := range s.data[i] {
