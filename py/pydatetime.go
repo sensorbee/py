@@ -24,11 +24,25 @@ PyObject* GetPyDateTime(int year, int month, int day, int hour, int minute,
 */
 import "C"
 import (
+	"runtime"
 	"time"
 )
 
 func init() {
+	// Lock Native thread for initializing python
+	runtime.LockOSThread()
+
+	// PyDateTime_IMPORT requires python initialized interpreter and
+	// need to call Initialize.
+	if err := Initialize(); err != nil {
+		panic(err)
+	}
+
 	C.init_PyDateTime()
+
+	// Release GIL from this thread
+	tstate := C.PyGILState_GetThisThreadState()
+	C.PyEval_ReleaseThread(tstate)
 }
 
 func IsPyTypeDateTime(o *C.PyObject) bool {

@@ -146,7 +146,7 @@ func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
 		// Cannot get `utcoffset` function
 		return data.Timestamp(t)
 	}
-	defer pyFunc.DecRef()
+	defer pyFunc.decRef()
 
 	ret, err := pyFunc.CallObject(Object{})
 	if ret.p == nil && err != nil {
