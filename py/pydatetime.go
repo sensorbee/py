@@ -9,11 +9,11 @@ void init_PyDateTime() {
   PyDateTime_IMPORT;
 }
 
-int PyDateTimeCheckExact(PyObject* o) {
+int IsPyTypeDateTime(PyObject* o) {
   return PyDateTime_CheckExact(o);
 }
 
-int PyTimeDeltaCheckExact(PyObject* o) {
+int IsPyTypeTimeDelta(PyObject* o) {
   return PyDelta_CheckExact(o);
 }
 
@@ -31,12 +31,12 @@ func init() {
 	C.init_PyDateTime()
 }
 
-func pyDateTimeCheckExact(o *C.PyObject) bool {
-	return C.PyDateTimeCheckExact(o) > 0
+func IsPyTypeDateTime(o *C.PyObject) bool {
+	return C.IsPyTypeDateTime(o) > 0
 }
 
-func pyTimeDeltaCheckExact(o *C.PyObject) bool {
-	return C.PyTimeDeltaCheckExact(o) > 0
+func IsPyTypeTimeDelta(o *C.PyObject) bool {
+	return C.IsPyTypeTimeDelta(o) > 0
 }
 
 func getPyDateTime(t time.Time) *C.PyObject {
