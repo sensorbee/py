@@ -6,7 +6,6 @@ package py
 */
 import "C"
 import (
-	"errors"
 	"fmt"
 	"pfi/sensorbee/sensorbee/data"
 	"runtime"
@@ -47,13 +46,13 @@ func LoadModule(name string) (ObjectModule, error) {
 	return res.val, res.err
 }
 
-// GetInstance returns `name` constructor.
-func (m *ObjectModule) NewInstance(name string, args ...data.Value) (ObjectModule, error) {
+// NewInstance returns `name` constructor.
+func (m *ObjectModule) NewInstance(name string, args ...data.Value) (ObjectInstance, error) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
 	type Result struct {
-		val ObjectModule
+		val ObjectInstance
 		err error
 	}
 	ch := make(chan *Result, 1)
@@ -64,7 +63,7 @@ func (m *ObjectModule) NewInstance(name string, args ...data.Value) (ObjectModul
 
 		pyInstance := C.PyObject_GetAttrString(m.p, cName)
 		if pyInstance == nil {
-			ch <- &Result{ObjectModule{}, fmt.Errorf("cannot create '%v' instance", name)}
+			ch <- &Result{ObjectInstance{}, fmt.Errorf("cannot create '%v' instance", name)}
 			return
 		}
 		defer C.Py_DecRef(pyInstance)
@@ -79,7 +78,7 @@ func (m *ObjectModule) NewInstance(name string, args ...data.Value) (ObjectModul
 
 		// get constructor (called `__init__(self)`)
 		ret := C.PyObject_CallObject(pyInstance, pyArg)
-		ch <- &Result{ObjectModule{Object{p: ret}}, nil}
+		ch <- &Result{ObjectInstance{Object{p: ret}}, nil}
 	}()
 	res := <-ch
 
@@ -101,7 +100,7 @@ func (m *ObjectModule) Call(name string, args ...data.Value) (data.Value, error)
 		defer GILState_Release(state)
 
 		var res data.Value
-		pyFunc, err := m.getPyFunc(name)
+		pyFunc, err := getPyModuleFunc(m, name)
 		if err != nil {
 			ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
 			return
@@ -129,20 +128,4 @@ func (m *ObjectModule) Call(name string, args ...data.Value) (data.Value, error)
 	res := <-ch
 
 	return res.val, res.err
-}
-
-func (m *ObjectModule) getPyFunc(name string) (ObjectFunc, error) {
-	cFunc := C.CString(name)
-	defer C.free(unsafe.Pointer(cFunc))
-
-	pyFunc := C.PyObject_GetAttrString(m.p, cFunc)
-	if pyFunc == nil {
-		return ObjectFunc{}, errors.New("cannot load function")
-	}
-
-	if ok := C.PyCallable_Check(pyFunc); ok == 0 {
-		return ObjectFunc{}, errors.New("cannot call function")
-	}
-
-	return ObjectFunc{Object{p: pyFunc}}, nil
 }
