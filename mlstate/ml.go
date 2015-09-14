@@ -72,7 +72,8 @@ func (s *PyMLState) Write(ctx *core.Context, t *core.Tuple) error {
 			} else if acc, e = data.ToFloat(a); e != nil {
 				return err
 			}
-			ctx.Log().Infof("loss=%.3f acc=%.3f", loss, acc)
+			ctx.Log().Debugf("loss=%.3f acc=%.3f", loss/float64(s.batchSize),
+				acc/float64(s.batchSize))
 		}
 	}
 
@@ -102,7 +103,15 @@ func PyMLFit(ctx *core.Context, stateName string, bucket []data.Map) (data.Value
 	return s.FitMap(ctx, bucket)
 }
 
-// TODO: PyMLPredict
+// PyMLPredict predicts data and return estimate value.
+func PyMLPredict(ctx *core.Context, stateName string, dt data.Value) (data.Value, error) {
+	s, err := lookupPyMLState(ctx, stateName)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.ins.Call("predict", dt)
+}
 
 func lookupPyMLState(ctx *core.Context, stateName string) (*PyMLState, error) {
 	st, err := ctx.SharedStates.Get(stateName)

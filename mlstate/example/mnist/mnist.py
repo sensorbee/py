@@ -34,12 +34,11 @@ class MNIST(object):
         self.optimizer = optimizers.Adam()
         self.optimizer.setup(self.model.collect_parameters())
 
-    def forward(self, x_data, y_data, train=True):
-        x, t = chainer.Variable(x_data), chainer.Variable(y_data)
+    def forward(self, x_data, train=True):
+        x = chainer.Variable(x_data)
         h1 = F.dropout(F.relu(self.model.l1(x)),  train=train)
         h2 = F.dropout(F.relu(self.model.l2(h1)), train=train)
-        y = self.model.l3(h2)
-        return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
+        return self.model.l3(h2)
 
     def fit(self, xys):
         x = []
@@ -55,7 +54,12 @@ class MNIST(object):
             y_batch = cuda.to_gpu(y_batch)
 
         self.optimizer.zero_grads()
-        loss, acc = self.forward(x_batch, y_batch)
+        y = self.forward(x_batch)
+
+        t = chainer.Variable(y_batch)
+        loss = F.softmax_cross_entropy(y, t)
+        acc = F.accuracy(y, t)
+
         loss.backward()
         self.optimizer.update()
 
@@ -70,5 +74,15 @@ class MNIST(object):
         return retmap
 
     def predict(self, x):
+        # non batch
+        xx = []
+        xx.append(x)
+        x_data = np.array(xx, dtype=np.float32)
+        if self.gpu >= 0:
+            x_data = cuda.to_gpu(x_data)
 
-        return 0
+        y = self.forward(x_data, train=False)
+        y = y.data.reshape(y.data.shape[0], y.data.size / y.data.shape[0])
+        pred = y.argmax(axis=1)
+
+        return int(pred[0])
