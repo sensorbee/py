@@ -37,13 +37,13 @@ func TestCreateSource(t *testing.T) {
 				"labels_file_name":   data.String("_test_train_label"),
 				"data_size":          data.Int(1),
 				"image_element_size": data.Int(1),
-				"batch_size":         data.Int(1),
 				"random":             data.True,
 			}
 			requiredParam := []string{
-				"images_file_name", "labels_file_name", "data_size", "batch_size",
+				"images_file_name", "labels_file_name", "data_size",
 			}
 			for _, v := range requiredParam {
+				v := v
 				msg := fmt.Sprintf("Then should return '%v' value is not found error", v)
 				Convey(msg, func() {
 					p := baseParams[v]
@@ -63,7 +63,6 @@ func TestCreateSource(t *testing.T) {
 				"images_file_name": data.String("_test_train_image_"),
 				"labels_file_name": data.String("_test_train_label"),
 				"data_size":        data.Int(1),
-				"batch_size":       data.Int(1),
 			}
 			Convey("Then the creator should return not found error", func() {
 				s, err := dc.CreateSource(ctx, ioParams, params)
@@ -77,7 +76,6 @@ func TestCreateSource(t *testing.T) {
 				"images_file_name": data.String("_test_train_image"),
 				"labels_file_name": data.String("_test_train_label_"),
 				"data_size":        data.Int(1),
-				"batch_size":       data.Int(1),
 			}
 			Convey("Then the creator should return not found error", func() {
 				s, err := dc.CreateSource(ctx, ioParams, params)
@@ -94,7 +92,6 @@ func TestCreateSource(t *testing.T) {
 				"labels_file_name":   data.String("_test_train_label"),
 				"data_size":          data.Int(1),
 				"image_element_size": data.Int(1),
-				"batch_size":         data.Int(1),
 				"random":             data.False,
 			}
 			Convey("Then the creator should return not found error", func() {
@@ -109,7 +106,6 @@ func TestCreateSource(t *testing.T) {
 				So(len(ms.target), ShouldEqual, 1)
 				So(ms.imageElemSize, ShouldEqual, 1)
 				So(ms.dataSize, ShouldEqual, 1)
-				So(ms.batchSize, ShouldEqual, 1)
 				So(ms.randomFlag, ShouldBeFalse)
 			})
 		})
@@ -118,7 +114,6 @@ func TestCreateSource(t *testing.T) {
 				"images_file_name": data.String("_test_train_image"),
 				"labels_file_name": data.String("_test_train_label"),
 				"data_size":        data.Int(1),
-				"batch_size":       data.Int(1),
 			}
 			Convey("Then the creator should return not found error", func() {
 				s, err := createMNISTDataSource(ctx, ioParams, params)
@@ -132,7 +127,6 @@ func TestCreateSource(t *testing.T) {
 				So(len(ms.target), ShouldEqual, 1)
 				So(ms.imageElemSize, ShouldEqual, 28*28)
 				So(ms.dataSize, ShouldEqual, 1)
-				So(ms.batchSize, ShouldEqual, 1)
 				So(ms.randomFlag, ShouldBeTrue)
 			})
 		})

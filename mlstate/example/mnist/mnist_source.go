@@ -20,7 +20,6 @@ type mnistDataSource struct {
 	target        []int32
 	dataSize      int
 	imageElemSize int
-	batchSize     int
 	randomFlag    bool
 }
 
@@ -29,7 +28,6 @@ var (
 	labelsFileNamePath = data.MustCompilePath("labels_file_name")
 	dataSizePath       = data.MustCompilePath("data_size")
 	imageElemSizePath  = data.MustCompilePath("image_element_size")
-	batchSizePath      = data.MustCompilePath("batch_size")
 	randomFlagPath     = data.MustCompilePath("random")
 )
 
@@ -45,7 +43,6 @@ var (
 //  labels_file_name:   MNIST labels nbytes file path [required]
 //  data_size:          MNIST data size [required]
 //  image_element_size: MNIST image element size (default: 784=28*28)
-//  batch_size:         batch size [required]
 //  random:             randomize data on/off (default: true)
 func (s *DataSourceCreator) CreateSource(ctx *core.Context, ioParams *bql.IOParams,
 	params data.Map) (core.Source, error) {
@@ -92,15 +89,6 @@ func createMNISTDataSource(ctx *core.Context, ioParams *bql.IOParams,
 		imageElemSize = int(iesInt)
 	}
 
-	batchSize := 1
-	if bs, err := params.Get(batchSizePath); err != nil {
-		return nil, err
-	} else if bsInt, err := data.AsInt(bs); err != nil {
-		return nil, err
-	} else {
-		batchSize = int(bsInt)
-	}
-
 	randomFlag := true
 	if flag, err := params.Get(randomFlagPath); err == nil {
 		randomFlag, err = data.AsBool(flag)
@@ -120,7 +108,6 @@ func createMNISTDataSource(ctx *core.Context, ioParams *bql.IOParams,
 		target:        target,
 		dataSize:      dataSize,
 		imageElemSize: imageElemSize,
-		batchSize:     batchSize,
 		randomFlag:    randomFlag,
 	}
 
@@ -177,9 +164,6 @@ func getMNISTRawData(imagesDataName string, labelsDataName string, dataSize int,
 //
 // The MNIST data is randomized when random flag is true, a seed of
 // randomizing is not fixed.
-// [TODO: delete] And the data is separated by batch size. When a images data
-// size is 60,000 and batch size is 100, then 600 (=60,000/100) tuples will be
-// generated. A batch counter is set "batch_count"  key in a tuple.
 //
 // Output:
 //  data.Map{
