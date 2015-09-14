@@ -175,7 +175,7 @@ func getMNISTRawData(imagesDataName string, labelsDataName string, dataSize int,
 
 // GenerateStream generates MNIST data stream.
 //
-// [TODO] The MNIST data is randomized when random flag is true, a seed of
+// The MNIST data is randomized when random flag is true, a seed of
 // randomizing is not fixed.
 // [TODO: delete] And the data is separated by batch size. When a images data
 // size is 60,000 and batch size is 100, then 600 (=60,000/100) tuples will be
@@ -191,19 +191,39 @@ func (s *mnistDataSource) GenerateStream(ctx *core.Context, w core.Writer) error
 	for i := range perm {
 		perm[i] = i
 	}
-	if s.randomFlag {
-		ramdomPermutaion(perm)
+
+	// re-index to randomize
+	label := make([]int32, s.dataSize, s.dataSize)
+	image := make([][]float32, s.dataSize, s.dataSize)
+	for i := range image {
+		image[i] = make([]float32, s.imageElemSize, s.imageElemSize)
 	}
 
-	// TODO support random
-	for i := 0; i < s.dataSize; i++ {
-		image := make(data.Array, len(s.data[i]))
-		for j, f := range s.data[i] {
-			image[j] = data.Float(f)
+	if s.randomFlag {
+		ramdomPermutaion(perm)
+		for i, p := range perm {
+			label[i] = s.target[p]
+			for j, d := range s.data[p] {
+				image[i][j] = d
+			}
+		}
+	} else {
+		for i, l := range s.target {
+			label[i] = l
+			for j, d := range s.data[i] {
+				image[i][j] = d
+			}
+		}
+	}
+
+	for i, l := range label {
+		im := make(data.Array, len(image[i]), len(image[i]))
+		for j, d := range image[i] {
+			im[j] = data.Float(d)
 		}
 		dm := data.Map{
-			"label": data.Int(s.target[i]),
-			"data":  image,
+			"label": data.Int(l),
+			"data":  im,
 		}
 
 		now := time.Now()
