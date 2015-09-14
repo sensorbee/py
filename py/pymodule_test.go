@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestPythonInstanceCall(t *testing.T) {
+func TestNewInstanceAndStateness(t *testing.T) {
 	Convey("Given an initialized python module", t, func() {
 
 		ImportSysAndAppendPath("")
