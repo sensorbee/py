@@ -48,7 +48,7 @@ func LoadModule(name string) (ObjectModule, error) {
 }
 
 // GetInstance returns `name` constructor.
-func (m *ObjectModule) GetInstance(name string, args ...data.Value) (ObjectModule, error) {
+func (m *ObjectModule) NewInstance(name string, args ...data.Value) (ObjectModule, error) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
