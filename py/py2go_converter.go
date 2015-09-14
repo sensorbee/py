@@ -1,7 +1,7 @@
 package py
 
 /*
-#cgo darwin pkg-config: python-2.7
+#cgo pkg-config: python-2.7
 #include "Python.h"
 #include "datetime.h"
 
