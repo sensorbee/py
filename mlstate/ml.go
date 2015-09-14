@@ -7,6 +7,11 @@ import (
 	"pfi/sensorbee/sensorbee/data"
 )
 
+var (
+	lossPath = data.MustCompilePath("loss")
+	accPath  = data.MustCompilePath("accuracy")
+)
+
 type PyMLState struct {
 	mdl py.ObjectModule
 	ins py.ObjectModule
@@ -48,8 +53,27 @@ func (s *PyMLState) Write(ctx *core.Context, t *core.Tuple) error {
 
 	var err error
 	if len(s.bucket) >= s.batchSize {
-		_, err = s.Fit(ctx, s.bucket)
+		m, er := s.Fit(ctx, s.bucket)
+		err = er
 		s.bucket = s.bucket[:0] // clear slice but keep capacity
+
+		// optional logging, return non-error even if the value does not have
+		// accuracy and loss.
+		if ret, er := data.AsMap(m); er == nil {
+			var loss float64
+			if l, e := ret.Get(lossPath); e != nil {
+				return err
+			} else if loss, e = data.ToFloat(l); e != nil {
+				return err
+			}
+			var acc float64
+			if a, e := ret.Get(accPath); e != nil {
+				return err
+			} else if acc, e = data.ToFloat(a); e != nil {
+				return err
+			}
+			ctx.Log().Infof("loss=%.3f acc=%.3f", loss, acc)
+		}
 	}
 
 	return err
