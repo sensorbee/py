@@ -11,7 +11,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 
 		ImportSysAndAppendPath("")
 
-		mdl, err := LoadModule("_instance_test")
+		mdl, err := LoadModule("_test_new_instance")
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 
