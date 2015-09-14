@@ -140,15 +140,14 @@ func fromTimestamp(o *C.PyObject) data.Timestamp {
 // This function calls `utcoffset` method to acrquire offset from UTC for
 // adjusting time zone.
 func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
-	m := ObjectModule{Object{p: o}}
-	pyFunc, err := m.getPyFunc("utcoffset")
+	pyFunc, err := getPyFunc(o, "utcoffset")
 	if err != nil {
 		// Cannot get `utcoffset` function
 		return data.Timestamp(t)
 	}
 	defer pyFunc.decRef()
 
-	ret, err := pyFunc.CallObject(Object{})
+	ret, err := pyFunc.callObject(Object{})
 	if ret.p == nil && err != nil {
 		// Failed to execute `utcoffset` function
 		return data.Timestamp(t)

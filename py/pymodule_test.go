@@ -6,24 +6,24 @@ import (
 	"testing"
 )
 
-func TestPythonInstanceCall(t *testing.T) {
+func TestNewInstanceAndStateness(t *testing.T) {
 	Convey("Given an initialized python module", t, func() {
 
 		ImportSysAndAppendPath("")
 
-		mdl, err := LoadModule("_instance_test")
+		mdl, err := LoadModule("_test_new_instance")
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 
 		Convey("When get an invalid class instance", func() {
-			_, err := mdl.GetInstance("NonexistentClass")
+			_, err := mdl.NewInstance("NonexistentClass")
 			Convey("Then an error should be occurred", func() {
 				So(err, ShouldNotBeNil)
 			})
 		})
 
 		Convey("When get a new test python instance", func() {
-			ins, err := mdl.GetInstance("PythonTest")
+			ins, err := mdl.NewInstance("PythonTest")
 			Convey("Then process should get PyModule", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
@@ -46,7 +46,7 @@ func TestPythonInstanceCall(t *testing.T) {
 						})
 
 						Convey("And when get a new test python instance", func() {
-							ins2, err := mdl.GetInstance("PythonTest")
+							ins2, err := mdl.NewInstance("PythonTest")
 							Convey("Then process should get PyModule", func() {
 								So(err, ShouldBeNil)
 								So(ins2, ShouldNotBeNil)
@@ -73,7 +73,7 @@ func TestPythonInstanceCall(t *testing.T) {
 
 		Convey("When get a new test python instance with param", func() {
 			params := data.String("python_test")
-			ins, err := mdl.GetInstance("PythonTest2", params)
+			ins, err := mdl.NewInstance("PythonTest2", params)
 
 			Convey("Then process should get instance and set values", func() {
 				So(err, ShouldBeNil)
@@ -88,7 +88,7 @@ func TestPythonInstanceCall(t *testing.T) {
 
 				Convey("And when get another python instance with param", func() {
 					params2 := data.String("python_test2")
-					ins2, err := mdl.GetInstance("PythonTest2", params2)
+					ins2, err := mdl.NewInstance("PythonTest2", params2)
 
 					Convey("Then process should get another instance and set values", func() {
 						So(err, ShouldBeNil)
