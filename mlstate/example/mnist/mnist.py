@@ -31,7 +31,7 @@ class MNIST(object):
 
         # Setup optimizer
         self.optimizer = optimizers.Adam()
-        self.optimizer.setup(self.initmodel.collect_parameters())
+        self.optimizer.setup(self.model.collect_parameters())
 
     def forward(self, x_data, y_data, train=True):
         x, t = chainer.Variable(x_data), chainer.Variable(y_data)
