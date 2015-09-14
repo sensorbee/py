@@ -6,14 +6,14 @@ Go codes in `py` package use cgo and call `Py_Object`, cgo code is here:
 
 ```go
 /*
-#cgo darwin pkg-config: python-2.7
+#cgo pkg-config: python-2.7
 #include "Python.h"
 */
 ```
 
 Currently pystate use pkg-config to link "Python.h". User needs to set up pkg-config and "python-2.7.pc".
 
-* [TODO] currently only support darwin, need to support linux, windows
+* [TODO] currently only support darwin and linux, need to support windows
 * [TODO] support python3
 
 ### Example
