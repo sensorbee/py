@@ -5,6 +5,7 @@ This is a minimal example to write a feed-forward net. It requires scikit-learn
 to load MNIST dataset.
 
 """
+import sys
 import numpy as np
 
 import chainer
@@ -40,10 +41,10 @@ class MNIST(object):
         y = self.model.l3(h2)
         return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
 
-    def fit(self, xy):
+    def fit(self, xys):
         x = []
         y = []
-        for d in xy:
+        for d in xys:
             x.append(d['data'])
             y.append(d['label'])
         x_batch = np.array(x, dtype=np.float32)
@@ -54,7 +55,7 @@ class MNIST(object):
             y_batch = cuda.to_gpu(y_batch)
 
         self.optimizer.zero_grads()
-        loss, acc, upmodel = self.forward(x_batch, y_batch)
+        loss, acc = self.forward(x_batch, y_batch)
         loss.backward()
         self.optimizer.update()
 
