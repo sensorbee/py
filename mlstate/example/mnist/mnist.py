@@ -5,8 +5,9 @@ This is a minimal example to write a feed-forward net. It requires scikit-learn
 to load MNIST dataset.
 
 """
-import sys
 import numpy as np
+
+import six
 
 import chainer
 from chainer import cuda, FunctionSet
@@ -16,15 +17,19 @@ from chainer import optimizers
 
 class MNIST(object):
 
-    def __init__(self):
+    def __init__(self, model_path):
         self.gpu = -1
 
         n_units = 1000
 
-        self.model = FunctionSet(
-            l1=F.Linear(784, n_units),
-            l2=F.Linear(n_units, n_units),
-            l3=F.Linear(n_units, 10))
+        if model_path != '':
+            with open(model_path, 'rb') as model_pickle:
+                self.model = six.moves.cPickle.load(model_pickle)
+        else:
+            self.model = FunctionSet(
+                l1=F.Linear(784, n_units),
+                l2=F.Linear(n_units, n_units),
+                l3=F.Linear(n_units, 10))
 
         if self.gpu >= 0:
             cuda.init(self.gpu)
@@ -86,3 +91,6 @@ class MNIST(object):
         pred = y.argmax(axis=1)
 
         return int(pred[0])
+
+    def get_model(self):
+        return self.model

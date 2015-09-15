@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-"""Chainer example: train a multi-layer perceptron on MNIST
-
-This is a minimal example to write a feed-forward net. It requires scikit-learn
-to load MNIST dataset.
+"""Test script for mnist.py, not use SensorBee
+Fit and predict MNIST data, and save modle as pickle.
 
 """
 import argparse
@@ -20,7 +18,7 @@ parser.add_argument('--gpu', '-g', default=-1, type=int,
 args = parser.parse_args()
 
 batchsize = 100
-n_epoch = 1  # chainer example is 20
+n_epoch = 10  # chainer example is 20
 
 # Prepare dataset
 print('load MNIST dataset')
@@ -73,3 +71,8 @@ for epoch in six.moves.range(1, n_epoch + 1):
             acc_cnt += 1
 
     print('test  mean accuracy={}'.format(float(acc_cnt) / N_test))
+
+# save model
+with open('mnist_model.pkl', 'wb') as output:
+    six.moves.cPickle.dump(mf.get_model(), output, -1)
+    print('save done')

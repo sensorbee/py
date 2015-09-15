@@ -12,6 +12,7 @@ var (
 	accPath  = data.MustCompilePath("accuracy")
 )
 
+// PyMLState is python instance specialized to multiple layer classification.
 type PyMLState struct {
 	mdl py.ObjectModule
 	ins py.ObjectInstance
@@ -20,7 +21,9 @@ type PyMLState struct {
 	batchSize int
 }
 
-func NewPyMLState(modulePathName, moduleName, className string, batchSize int) (*PyMLState, error) {
+// NewPyMLState creates `core.SharedState` for multiple layer classification.
+func NewPyMLState(modulePathName, moduleName, className string, batchSize int,
+	modelPath string) (*PyMLState, error) {
 	py.ImportSysAndAppendPath(modulePathName)
 
 	mdl, err := py.LoadModule(moduleName)
@@ -28,7 +31,7 @@ func NewPyMLState(modulePathName, moduleName, className string, batchSize int) (
 		return nil, err
 	}
 
-	ins, err := mdl.NewInstance(className)
+	ins, err := mdl.NewInstance(className, data.String(modelPath))
 	if err != nil {
 		mdl.DecRef()
 		return nil, err
@@ -42,12 +45,14 @@ func NewPyMLState(modulePathName, moduleName, className string, batchSize int) (
 	}, nil
 }
 
+// Terminate this state.
 func (s *PyMLState) Terminate(ctx *core.Context) error {
 	s.ins.DecRef()
 	s.mdl.DecRef()
 	return nil
 }
 
+// Write and call "fit" function. Tuples is cached per train batch size.
 func (s *PyMLState) Write(ctx *core.Context, t *core.Tuple) error {
 	s.bucket = append(s.bucket, t.Data)
 
@@ -80,12 +85,13 @@ func (s *PyMLState) Write(ctx *core.Context, t *core.Tuple) error {
 	return err
 }
 
-// Fit receives data.Array type but it assumes `[]data.Map` type
+// Fit receives `data.Array` type but it assumes `[]data.Map` type
 // for passing arguments to `fit` method.
 func (s *PyMLState) Fit(ctx *core.Context, bucket data.Array) (data.Value, error) {
 	return s.ins.Call("fit", bucket)
 }
 
+// FitMap receives `[]data.Map`, these maps are converted to `data.Array`
 func (s *PyMLState) FitMap(ctx *core.Context, bucket []data.Map) (data.Value, error) {
 	args := make(data.Array, len(bucket))
 	for i, v := range bucket {
@@ -94,6 +100,8 @@ func (s *PyMLState) FitMap(ctx *core.Context, bucket []data.Map) (data.Value, er
 	return s.ins.Call("fit", args)
 }
 
+// PyMLFit fits buckets. fit algorithm and return value is depends on Python
+// implementation.
 func PyMLFit(ctx *core.Context, stateName string, bucket []data.Map) (data.Value, error) {
 	s, err := lookupPyMLState(ctx, stateName)
 	if err != nil {

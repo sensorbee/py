@@ -13,15 +13,28 @@ var (
 	moduleNamePath     = "module_name"
 	classNamePath      = "class_name"
 	batchTrainSizePath = "batch_train_size"
+	modelFilePath      = "model_file_path"
 )
 
-// PyMLStateCreator is used by BQL to create or load AROWState as a UDS.
+// PyMLStateCreator is used by BQL to create or load Multiple Layer Classification
+// State as a UDS.
 type PyMLStateCreator struct {
 }
 
 var _ udf.UDSLoader = &PyMLStateCreator{}
 
-func (c *PyMLStateCreator) CreateState(ctx *core.Context, params data.Map) (core.SharedState, error) {
+// CreateState creates `core.SharedState`
+//
+// * module_path:      Directory path of python module path, default is ''.
+// * module_name:      Python module name, required.
+// * class_name:       Python class name, required.
+// * batch_train_size: Batch size of training. Created state is SharedSink, when
+//                     calling "fit" function, the state send train data as
+//                     array, which length is "batch_train_size". Default is 10.
+// * model_file_path:  A model to use in fit and predict. The model style is
+//                     depend on Python implementation. Default is ''.
+func (c *PyMLStateCreator) CreateState(ctx *core.Context, params data.Map) (
+	core.SharedState, error) {
 	var err error
 	mdlPathName := ""
 	if mp, ok := params[modulePath]; ok {
@@ -59,9 +72,22 @@ func (c *PyMLStateCreator) CreateState(ctx *core.Context, params data.Map) (core
 		batchSize = int(batchSize64)
 	}
 
-	return NewPyMLState(mdlPathName, moduleName, className, batchSize)
+	modelPath := ""
+	if mp, ok := params[modelFilePath]; ok {
+		if modelPath, err = data.AsString(mp); err != nil {
+			return nil, err
+		}
+	}
+
+	return NewPyMLState(mdlPathName, moduleName, className, batchSize, modelPath)
 }
 
-func (c *PyMLStateCreator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (core.SharedState, error) {
-	return nil, fmt.Errorf("pymlstate doesn't support LoadState")
+// LoadState is same as CREATE STATE, but "model_file_path" is required.
+func (c *PyMLStateCreator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
+	core.SharedState, error) {
+	if _, ok := params[modelFilePath]; !ok {
+		return nil, fmt.Errorf("model_file_path is not specified")
+	}
+
+	return c.CreateState(ctx, params)
 }
