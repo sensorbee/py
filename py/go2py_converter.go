@@ -63,6 +63,8 @@ func newPyArray(a data.Array) *C.PyObject {
 	pylist := C.PyList_New(C.Py_ssize_t(len(a)))
 	for i, v := range a {
 		value := newPyObj(v)
+		// PyList object takes over the value's reference, and not need to
+		// decrease reference counter.
 		C.PyList_SetItem(pylist, C.Py_ssize_t(i), value.p)
 	}
 	return pylist
@@ -71,9 +73,12 @@ func newPyArray(a data.Array) *C.PyObject {
 func newPyMap(m data.Map) *C.PyObject {
 	pydict := C.PyDict_New()
 	for k, v := range m {
-		key := newPyString(k)
-		value := newPyObj(v)
-		C.PyDict_SetItem(pydict, key, value.p)
+		func() {
+			key := newPyString(k)
+			value := newPyObj(v)
+			defer value.decRef()
+			C.PyDict_SetItem(pydict, key, value.p)
+		}()
 	}
 	return pydict
 }
