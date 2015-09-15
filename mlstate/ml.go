@@ -14,7 +14,6 @@ var (
 
 // PyMLState is python instance specialized to multiple layer classification.
 type PyMLState struct {
-	mdl py.ObjectModule
 	ins py.ObjectInstance
 
 	bucket    data.Array
@@ -30,15 +29,14 @@ func NewPyMLState(modulePathName, moduleName, className string, batchSize int,
 	if err != nil {
 		return nil, err
 	}
+	defer mdl.DecRef()
 
 	ins, err := mdl.NewInstance(className, data.String(modelPath))
 	if err != nil {
-		mdl.DecRef()
 		return nil, err
 	}
 
 	return &PyMLState{
-		mdl:       mdl,
 		ins:       ins,
 		bucket:    make(data.Array, 0, batchSize),
 		batchSize: batchSize,
@@ -48,7 +46,6 @@ func NewPyMLState(modulePathName, moduleName, className string, batchSize int,
 // Terminate this state.
 func (s *PyMLState) Terminate(ctx *core.Context) error {
 	s.ins.DecRef()
-	s.mdl.DecRef()
 	return nil
 }
 
