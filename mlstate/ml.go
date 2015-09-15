@@ -14,7 +14,7 @@ var (
 
 type PyMLState struct {
 	mdl py.ObjectModule
-	ins py.ObjectModule
+	ins py.ObjectInstance
 
 	bucket    data.Array
 	batchSize int
@@ -28,7 +28,7 @@ func NewPyMLState(modulePathName, moduleName, className string, batchSize int) (
 		return nil, err
 	}
 
-	ins, err := mdl.GetInstance(className)
+	ins, err := mdl.NewInstance(className)
 	if err != nil {
 		mdl.DecRef()
 		return nil, err
