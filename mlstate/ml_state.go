@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	modulePath         = "module_path"
-	moduleNamePath     = "module_name"
-	classNamePath      = "class_name"
-	batchTrainSizePath = "batch_train_size"
-	modelFilePath      = "model_file_path"
+	modulePath         = data.MustCompilePath("module_path")
+	moduleNamePath     = data.MustCompilePath("module_name")
+	classNamePath      = data.MustCompilePath("class_name")
+	batchTrainSizePath = data.MustCompilePath("batch_train_size")
+	modelFilePath      = data.MustCompilePath("model_file_path")
 )
 
 // PyMLStateCreator is used by BQL to create or load Multiple Layer Classification
@@ -37,23 +37,23 @@ func (c *PyMLStateCreator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
 	var err error
 	mdlPathName := ""
-	if mp, ok := params[modulePath]; ok {
+	if mp, err := params.Get(modulePath); err == nil {
 		if mdlPathName, err = data.AsString(mp); err != nil {
 			return nil, err
 		}
 	}
-	mn, ok := params[moduleNamePath]
-	if !ok {
-		return nil, fmt.Errorf("module_name is not specified")
+	mn, err := params.Get(moduleNamePath)
+	if err != nil {
+		return nil, err
 	}
 	moduleName, err := data.AsString(mn)
 	if err != nil {
 		return nil, err
 	}
 
-	cn, ok := params[classNamePath]
-	if !ok {
-		return nil, fmt.Errorf("class_name is not specified")
+	cn, err := params.Get(classNamePath)
+	if err != nil {
+		return nil, err
 	}
 	className, err := data.AsString(cn)
 	if err != nil {
@@ -61,7 +61,7 @@ func (c *PyMLStateCreator) CreateState(ctx *core.Context, params data.Map) (
 	}
 
 	batchSize := 10
-	if bs, ok := params[batchTrainSizePath]; ok {
+	if bs, err := params.Get(batchTrainSizePath); err == nil {
 		var batchSize64 int64
 		if batchSize64, err = data.AsInt(bs); err != nil {
 			return nil, err
@@ -73,7 +73,7 @@ func (c *PyMLStateCreator) CreateState(ctx *core.Context, params data.Map) (
 	}
 
 	modelPath := ""
-	if mp, ok := params[modelFilePath]; ok {
+	if mp, err := params.Get(modelFilePath); err == nil {
 		if modelPath, err = data.AsString(mp); err != nil {
 			return nil, err
 		}
@@ -85,8 +85,8 @@ func (c *PyMLStateCreator) CreateState(ctx *core.Context, params data.Map) (
 // LoadState is same as CREATE STATE, but "model_file_path" is required.
 func (c *PyMLStateCreator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
 	core.SharedState, error) {
-	if _, ok := params[modelFilePath]; !ok {
-		return nil, fmt.Errorf("model_file_path is not specified")
+	if _, err := params.Get(modelFilePath); err != nil {
+		return nil, err
 	}
 
 	return c.CreateState(ctx, params)
