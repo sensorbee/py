@@ -62,11 +62,31 @@ CREATE PAUSED SOURCE mnist_test_data TYPE mnist_source
          labels_file_name='t10k-labels-idx1-ubyte',
          data_size=10000,
          image_element_size=784, -- optional
-         rondom=false -- optional
+         rondom=false
 ;
 
 CREATE STREAM ml_mnist_eval AS SELECT RSTREAM
     pymlstate_predict('ml_mnist', me:data) AS pred,
+    me:label AS label
+    FROM mnist_test_data [RANGE 1 TUPLES] AS me
+;
+```
+
+### Use saved FunctionSet
+
+`pymlstate` can use trained model, create another state which read saved model and use the state in evaluation stream.
+
+```sql
+-- load traned data
+CREATE STATE ml_mnist_trained TYPE pymlstate
+    WITH module_path='',
+         module_name='mnist', -- mnist.py
+         class_name='MNIST',
+         model_file_path='mnist_model.pkl' -- saved model file path
+;
+
+CREATE STREAM ml_mnist_eval AS SELECT RSTREAM
+    pymlstate_predict('ml_mnist_trained', me:data) AS pred,
     me:label AS label
     FROM mnist_test_data [RANGE 1 TUPLES] AS me
 ;
@@ -86,4 +106,3 @@ RESUME SOURCE mnist_test_data;
 ```
 
 * [TODO] these query output 10000 lines, should be modified.
-* [TODO] Save/Load
