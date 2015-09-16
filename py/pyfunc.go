@@ -42,7 +42,11 @@ func invoke(pyObj *C.PyObject, name string, args []data.Value) (data.Value, erro
 		defer C.Py_DecRef(pyArg)
 
 		for i, v := range args {
-			o := newPyObj(v)
+			o, err := newPyObj(v)
+			if err != nil {
+				ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
+				return
+			}
 			// PyTuple object takes over the value's reference, and not need to
 			// decrease reference counter.
 			C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
