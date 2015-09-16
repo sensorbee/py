@@ -59,7 +59,8 @@ func invoke(pyObj *C.PyObject, name string, args []data.Value) (data.Value, erro
 		}
 		defer ret.decRef()
 
-		ch <- &Result{fromPyTypeObject(ret.p), nil}
+		po, err := fromPyTypeObject(ret.p)
+		ch <- &Result{po, err}
 	}()
 	res := <-ch
 

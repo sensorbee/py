@@ -43,38 +43,39 @@ int IsPyTypeNone(PyObject *o) {
 */
 import "C"
 import (
+	"fmt"
 	"pfi/sensorbee/sensorbee/data"
 	"time"
 	"unsafe"
 )
 
-func fromPyTypeObject(o *C.PyObject) data.Value {
+func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 	switch {
 	case C.IsPyTypeTrue(o) > 0:
-		return data.Bool(true)
+		return data.Bool(true), nil
 
 	case C.IsPyTypeFalse(o) > 0:
-		return data.Bool(false)
+		return data.Bool(false), nil
 
 	case C.IsPyTypeInt(o) > 0:
-		return data.Int(C.PyInt_AsLong(o))
+		return data.Int(C.PyInt_AsLong(o)), nil
 
 	case C.IsPyTypeFloat(o) > 0:
-		return data.Float(C.PyFloat_AsDouble(o))
+		return data.Float(C.PyFloat_AsDouble(o)), nil
 
 	case C.IsPyTypeByteArray(o) > 0:
 		bytePtr := C.PyByteArray_FromObject(o)
 		charPtr := C.PyByteArray_AsString(bytePtr)
 		l := C.PyByteArray_Size(o)
-		return data.Blob(C.GoBytes(unsafe.Pointer(charPtr), C.int(l)))
+		return data.Blob(C.GoBytes(unsafe.Pointer(charPtr), C.int(l))), nil
 
 	case C.IsPyTypeString(o) > 0:
 		size := C.int(C.PyString_Size(o))
 		charPtr := C.PyString_AsString(o)
-		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size)))
+		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size))), nil
 
 	case IsPyTypeDateTime(o):
-		return fromTimestamp(o)
+		return fromTimestamp(o), nil
 
 	case C.IsPyTypeList(o) > 0:
 		return fromPyArray(o)
@@ -83,24 +84,28 @@ func fromPyTypeObject(o *C.PyObject) data.Value {
 		return fromPyMap(o)
 
 	case C.IsPyTypeNone(o) > 0:
-		return data.Null{}
+		return data.Null{}, nil
 
 	}
 
-	return data.Null{}
+	return data.Null{}, fmt.Errorf("not supported python object")
 }
 
-func fromPyArray(ls *C.PyObject) data.Array {
+func fromPyArray(ls *C.PyObject) (data.Array, error) {
 	size := int(C.PyList_Size(ls))
 	array := make(data.Array, size)
 	for i := 0; i < size; i++ {
 		o := C.PyList_GetItem(ls, C.Py_ssize_t(i))
-		array[i] = fromPyTypeObject(o)
+		v, err := fromPyTypeObject(o)
+		if err != nil {
+			return nil, err
+		}
+		array[i] = v
 	}
-	return array
+	return array, nil
 }
 
-func fromPyMap(o *C.PyObject) data.Map {
+func fromPyMap(o *C.PyObject) (data.Map, error) {
 	m := data.Map{}
 
 	var key, value *C.PyObject
@@ -111,11 +116,16 @@ func fromPyMap(o *C.PyObject) data.Map {
 		if key.ob_type != &C.PyString_Type {
 			continue
 		}
-		key, _ := data.ToString(fromPyTypeObject(key))
-		m[key] = fromPyTypeObject(value)
+		k, _ := fromPyTypeObject(key)
+		key, _ := data.ToString(k)
+		v, err := fromPyTypeObject(value)
+		if err != nil {
+			return nil, err
+		}
+		m[key] = v
 	}
 
-	return m
+	return m, nil
 }
 
 func fromTimestamp(o *C.PyObject) data.Timestamp {
