@@ -14,6 +14,7 @@ var (
 	classNamePath      = data.MustCompilePath("class_name")
 	batchTrainSizePath = data.MustCompilePath("batch_train_size")
 	modelFilePath      = data.MustCompilePath("model_file_path")
+	gpuIDPath          = data.MustCompilePath("gpu")
 )
 
 // PyMLStateCreator is used by BQL to create or load Multiple Layer Classification
@@ -79,7 +80,17 @@ func (c *PyMLStateCreator) CreateState(ctx *core.Context, params data.Map) (
 		}
 	}
 
-	return NewPyMLState(mdlPathName, moduleName, className, batchSize, modelPath)
+	gpuID := -1
+	if gid, err := params.Get(gpuIDPath); err == nil {
+		gpu, err := data.ToInt(gid)
+		if err != nil {
+			return nil, err
+		}
+		gpuID = int(gpu)
+	}
+
+	return NewPyMLState(mdlPathName, moduleName, className, batchSize, modelPath,
+		gpuID)
 }
 
 // LoadState is same as CREATE STATE, but "model_file_path" is required.

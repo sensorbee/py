@@ -17,8 +17,8 @@ from chainer import optimizers
 
 class MNIST(object):
 
-    def __init__(self, model_path):
-        self.gpu = -1
+    def __init__(self, model_path, gpu):
+        self.gpu = gpu
 
         n_units = 1000
 

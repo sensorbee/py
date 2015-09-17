@@ -33,7 +33,7 @@ y_train, y_test = np.split(mnist['target'], [N])
 N_test = y_test.size
 
 # Neural net architecture
-mf = m.MNIST()
+mf = m.MNIST('', args.gpu)
 
 # Learning loop
 for epoch in six.moves.range(1, n_epoch + 1):
