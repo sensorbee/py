@@ -109,5 +109,13 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				})
 			})
 		})
+
+		Convey("When get a new test python instance with invalid param", func() {
+			params := data.String("unnecessary_param")
+			_, err := mdl.NewInstance("PythonTest", params)
+			Convey("Then an error should be occurred", func() {
+				So(err, ShouldNotBeNil)
+			})
+		})
 	})
 }

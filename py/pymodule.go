@@ -82,6 +82,10 @@ func (m *ObjectModule) NewInstance(name string, args ...data.Value) (ObjectInsta
 
 		// get constructor (called `__init__(self)`)
 		ret := C.PyObject_CallObject(pyInstance, pyArg)
+		if ret == nil {
+			ch <- &Result{ObjectInstance{}, fmt.Errorf("cannot create '%v' instance", name)}
+			return
+		}
 		ch <- &Result{ObjectInstance{Object{p: ret}}, nil}
 	}()
 	res := <-ch
