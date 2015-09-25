@@ -37,6 +37,10 @@ int IsPyTypeDict(PyObject *o) {
   return PyDict_CheckExact(o);
 }
 
+int IsPyTypeTuple(PyObject *o) {
+  return PyTuple_CheckExact(o);
+}
+
 int IsPyTypeNone(PyObject *o) {
   return o == Py_None;
 }
@@ -83,6 +87,9 @@ func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 	case C.IsPyTypeDict(o) > 0:
 		return fromPyMap(o)
 
+	case C.IsPyTypeTuple(o) > 0:
+		return fromPyTuple(o)
+
 	case C.IsPyTypeNone(o) > 0:
 		return data.Null{}, nil
 
@@ -126,6 +133,20 @@ func fromPyMap(o *C.PyObject) (data.Map, error) {
 	}
 
 	return m, nil
+}
+
+func fromPyTuple(o *C.PyObject) (data.Array, error) {
+	size := int(C.PyTuple_Size(o))
+	array := make(data.Array, size)
+	for i := 0; i < size; i++ {
+		o := C.PyTuple_GetItem(o, C.Py_ssize_t(i))
+		v, err := fromPyTypeObject(o)
+		if err != nil {
+			return nil, err
+		}
+		array[i] = v
+	}
+	return array, nil
 }
 
 func fromTimestamp(o *C.PyObject) data.Timestamp {
