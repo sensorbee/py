@@ -22,8 +22,6 @@ func TestConvertGo2PyObject(t *testing.T) {
 		}
 
 		Convey("When set an object", func() {
-			now := time.Now()
-			nowStr := now.Format("2006-01-02 15:04:05.999999")
 			values := map[string]argAndExpected{
 				"string": argAndExpected{data.String("test"), "test"},
 				"int":    argAndExpected{data.Int(9), "9"},
@@ -31,7 +29,6 @@ func TestConvertGo2PyObject(t *testing.T) {
 				"byte":   argAndExpected{data.Blob([]byte("ABC")), "ABC"},
 				"true":   argAndExpected{data.True, "True"},
 				"false":  argAndExpected{data.False, "False"},
-				"time":   argAndExpected{data.Timestamp(now), nowStr},
 				"null":   argAndExpected{data.Null{}, "None"},
 			}
 			for k, v := range values {
@@ -43,6 +40,17 @@ func TestConvertGo2PyObject(t *testing.T) {
 					So(actual, ShouldEqual, v.expected)
 				})
 			}
+
+			Convey("Then function should return string value: time", func() {
+				now := time.Now().UTC()
+				actual, err := mdl.Call("go2py_tostr", data.Timestamp(now))
+				So(err, ShouldBeNil)
+				retStr, err := data.AsString(actual)
+				So(err, ShouldBeNil)
+				parsed, err := time.Parse("2006-01-02 15:04:05.999999999", retStr)
+				So(err, ShouldBeNil)
+				So(parsed, ShouldResemble, now.Truncate(time.Microsecond)) // Python's datetime has microseconds precision
+			})
 		})
 
 		Convey("When set map in map and map in array", func() {
