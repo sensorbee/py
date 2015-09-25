@@ -59,3 +59,11 @@ class TEST_TZ(datetime.tzinfo):
 
 def return_timestamp_with_tz():
     return datetime.datetime(2015, 4, 1, 14, 27, 0, 500*1000, TEST_TZ())
+
+
+def return_onetuple():
+    return ('a', {'key1': 1}, [1, 2])
+
+
+def return_astuple():
+    return 'a', {'key1': 1}, [1, 2]

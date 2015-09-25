@@ -32,6 +32,8 @@ func TestConvertPyObject2Go(t *testing.T) {
 			{"none", data.Null{}},
 			{"timestamp", data.Timestamp(time.Date(2015, time.May, 1, 14, 27, 0, 500*int(time.Millisecond), time.UTC))},
 			{"timestamp_with_tz", data.Timestamp(time.Date(2015, time.May, 1, 5, 24, 0, 500*int(time.Millisecond), time.UTC))},
+			{"onetuple", data.Array{data.String("a"), data.Map{"key1": data.Int(1)}, data.Array{data.Int(1), data.Int(2)}}},
+			{"astuple", data.Array{data.String("a"), data.Map{"key1": data.Int(1)}, data.Array{data.Int(1), data.Int(2)}}},
 		}
 
 		for _, r := range returnTypes {

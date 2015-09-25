@@ -37,6 +37,10 @@ int IsPyTypeDict(PyObject *o) {
   return PyDict_CheckExact(o);
 }
 
+int IsPyTypeTuple(PyObject *o) {
+  return PyTuple_CheckExact(o);
+}
+
 int IsPyTypeNone(PyObject *o) {
   return o == Py_None;
 }
@@ -83,6 +87,9 @@ func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 	case C.IsPyTypeDict(o) > 0:
 		return fromPyMap(o)
 
+	case C.IsPyTypeTuple(o) > 0:
+		return fromPyTuple(o)
+
 	case C.IsPyTypeNone(o) > 0:
 		return data.Null{}, nil
 
@@ -128,6 +135,20 @@ func fromPyMap(o *C.PyObject) (data.Map, error) {
 	return m, nil
 }
 
+func fromPyTuple(o *C.PyObject) (data.Array, error) {
+	size := int(C.PyTuple_Size(o))
+	array := make(data.Array, size)
+	for i := 0; i < size; i++ {
+		o := C.PyTuple_GetItem(o, C.Py_ssize_t(i))
+		v, err := fromPyTypeObject(o)
+		if err != nil {
+			return nil, err
+		}
+		array[i] = v
+	}
+	return array, nil
+}
+
 func fromTimestamp(o *C.PyObject) data.Timestamp {
 	// FIXME: this internal code should not use
 	d := (*C.PyDateTime_DateTime)(unsafe.Pointer(o))
@@ -147,7 +168,7 @@ func fromTimestamp(o *C.PyObject) data.Timestamp {
 // from datetime with tzinfo.  All of datetime passed to Go from Python API
 // must be unified into UTC time zone by this function.
 //
-// This function calls `utcoffset` method to acrquire offset from UTC for
+// This function calls `utcoffset` method to acquire offset from UTC for
 // adjusting time zone.
 func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
 	pyFunc, err := getPyFunc(o, "utcoffset")
@@ -171,6 +192,7 @@ func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
 	// Adjust for time zone
 	delta := (*C.PyDateTime_Delta)(unsafe.Pointer(ret.p))
 	t = t.AddDate(0, 0, -int(delta.days))
-	t = t.Add(time.Duration(-delta.seconds)*time.Second + time.Duration(-delta.microseconds)*time.Microsecond)
+	t = t.Add(time.Duration(-delta.seconds)*time.Second +
+		time.Duration(-delta.microseconds)*time.Microsecond)
 	return data.Timestamp(t)
 }
