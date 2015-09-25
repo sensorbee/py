@@ -147,7 +147,7 @@ func fromTimestamp(o *C.PyObject) data.Timestamp {
 // from datetime with tzinfo.  All of datetime passed to Go from Python API
 // must be unified into UTC time zone by this function.
 //
-// This function calls `utcoffset` method to acrquire offset from UTC for
+// This function calls `utcoffset` method to acquire offset from UTC for
 // adjusting time zone.
 func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
 	pyFunc, err := getPyFunc(o, "utcoffset")
@@ -171,6 +171,7 @@ func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
 	// Adjust for time zone
 	delta := (*C.PyDateTime_Delta)(unsafe.Pointer(ret.p))
 	t = t.AddDate(0, 0, -int(delta.days))
-	t = t.Add(time.Duration(-delta.seconds)*time.Second + time.Duration(-delta.microseconds)*time.Microsecond)
+	t = t.Add(time.Duration(-delta.seconds)*time.Second +
+		time.Duration(-delta.microseconds)*time.Microsecond)
 	return data.Timestamp(t)
 }
