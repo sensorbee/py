@@ -94,3 +94,9 @@ class MNIST(object):
 
     def get_model(self):
         return self.model
+
+    def save(self):
+        return bytearray(six.moves.cPickle.dumps(self.model))
+
+    def load(self, model_data):
+        self.model = six.moves.cPickle.loads(str(model_data))
