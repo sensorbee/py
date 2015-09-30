@@ -1,7 +1,10 @@
 package mlstate
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"pfi/sensorbee/pystate/py"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
@@ -95,6 +98,36 @@ func (s *PyMLState) FitMap(ctx *core.Context, bucket []data.Map) (data.Value, er
 		args[i] = v
 	}
 	return s.ins.Call("fit", args)
+}
+
+// Save saves the model of the state. pystate calls `save` method and
+// use its return value as dumped model.
+func (s *PyMLState) Save(ctx *core.Context, w io.Writer, params data.Map) error {
+	res, err := s.ins.Call("save")
+	if err != nil {
+		return err
+	}
+
+	b, err := data.AsBlob(res)
+	if err != nil {
+		return err
+	}
+
+	buf := bytes.NewBuffer(b)
+	_, err = buf.WriteTo(w)
+	return err
+}
+
+// Load loads the model of the state. pystate calls `load` method and
+// pass to the model data by using method parameter.
+func (s *PyMLState) Load(ctx *core.Context, r io.Reader, params data.Map) error {
+	dat, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.ins.Call("load", data.Blob(dat))
+	return err
 }
 
 // PyMLFit fits buckets. fit algorithm and return value is depends on Python
