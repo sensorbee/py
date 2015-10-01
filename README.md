@@ -4,12 +4,24 @@ pystate supports Python module and instance using `Py_Object`.
 
 Go codes in `py` package use cgo and call `Py_Object`, cgo code is here:
 
+"cgoflags.go"
+
 ```go
 /*
 #cgo pkg-config: python-2.7
-#include "Python.h"
 */
 ```
+
+other *.go, for example "pydatetime.go"
+
+```go
+/*
+#include "Python.h"
+#include "datetime.h"
+...
+*/
+```
+
 
 Currently pystate use pkg-config to link "Python.h". User needs to set up pkg-config and "python-2.7.pc".
 
