@@ -4,7 +4,7 @@ pystate supports Python module and instance using `Py_Object`.
 
 Go codes in `py` package use cgo and call `Py_Object`, cgo code is here:
 
-"cgoflags.go"
+"cgolinks.go"
 
 ```go
 /*
