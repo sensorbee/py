@@ -64,7 +64,7 @@ func invoke(pyObj *C.PyObject, name string, args []data.Value) (data.Value, erro
 		}
 
 		ret, err := pyFunc.callObject(Object{p: pyArg})
-		if ret.p == nil && err != nil {
+		if err != nil {
 			ch <- &Result{res, fmt.Errorf("%v in '%v'", err.Error(), name)}
 			return
 		}
