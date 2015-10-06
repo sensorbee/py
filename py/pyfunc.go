@@ -49,21 +49,14 @@ func invoke(pyObj *C.PyObject, name string, args []data.Value) (data.Value, erro
 		}
 		defer pyFunc.decRef()
 
-		pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
-		defer C.Py_DecRef(pyArg)
-
-		for i, v := range args {
-			o, err := newPyObj(v)
-			if err != nil {
-				ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
-				return
-			}
-			// PyTuple object takes over the value's reference, and not need to
-			// decrease reference counter.
-			C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
+		pyArg, err := convertArgsGo2Py(args)
+		if err != nil {
+			ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
+			return
 		}
+		defer pyArg.decRef()
 
-		ret, err := pyFunc.callObject(Object{p: pyArg})
+		ret, err := pyFunc.callObject(pyArg)
 		if err != nil {
 			ch <- &Result{res, fmt.Errorf("%v in '%v'", err.Error(), name)}
 			return
@@ -107,4 +100,25 @@ func (f *ObjectFunc) callObject(arg Object) (po Object, err error) {
 		err = fmt.Errorf("calling python function failed: %v", pyerr)
 	}
 	return
+}
+
+func convertArgsGo2Py(args []data.Value) (Object, error) {
+	pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
+	shouldDecRef := true
+	defer func() {
+		if shouldDecRef {
+			C.Py_DecRef(pyArg)
+		}
+	}()
+	for i, v := range args {
+		o, err := newPyObj(v)
+		if err != nil {
+			return Object{}, err
+		}
+		// PyTuple object takes over the value's reference, and not need to
+		// decrease reference counter.
+		C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
+	}
+	shouldDecRef = false
+	return Object{pyArg}, nil
 }
