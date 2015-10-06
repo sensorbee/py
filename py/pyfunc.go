@@ -5,6 +5,7 @@ package py
 
 char const* getErrString()
 {
+  // TODO: consider to use dummy/dummy2. They may contain useful information for users.
   PyObject *dummy, *o, *dummy2;
   PyErr_Fetch(&dummy, &o, &dummy2);
   return PyString_AsString(o);
