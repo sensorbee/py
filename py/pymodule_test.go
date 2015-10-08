@@ -117,5 +117,30 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				So(err, ShouldNotBeNil)
 			})
 		})
+
+		Convey("When get a new class instance", func() {
+			class, err := mdl.GetClass("PythonTest3")
+			Convey("Then process should get PythonTest3 class", func() {
+				So(err, ShouldBeNil)
+			})
+			Reset(func() {
+				class.DecRef()
+			})
+
+			Convey("Then process should get a string", func() {
+				actual, err := class.Call("get_str")
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "staticmethod")
+			})
+
+			Convey("Then process should get a new instance", func() {
+				obj, err := class.CallDirect("get_instance")
+				So(err, ShouldBeNil)
+				ins := &ObjectInstance{obj}
+				actual, err := ins.Call("get_instance_str")
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "instance method")
+			})
+		})
 	})
 }

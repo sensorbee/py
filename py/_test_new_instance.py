@@ -20,3 +20,17 @@ class PythonTest2(object):
 
     def get_a(self):
         return self.a
+
+
+class PythonTest3():
+
+    @staticmethod
+    def get_str():
+        return "staticmethod"
+
+    @staticmethod
+    def get_instance():
+        return PythonTest3()
+
+    def get_instance_str(self):
+        return "instance method"

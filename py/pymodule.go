@@ -92,6 +92,34 @@ func (m *ObjectModule) NewInstance(name string, args ...data.Value) (ObjectInsta
 	return res.val, res.err
 }
 
+// GetClass returns `name` class instance.
+// User needs to call DecRef when finished using instance.
+func (m *ObjectModule) GetClass(name string) (ObjectInstance, error) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	type Result struct {
+		val ObjectInstance
+		err error
+	}
+	ch := make(chan *Result, 1)
+	go func() {
+		runtime.LockOSThread()
+		state := GILState_Ensure()
+		defer GILState_Release(state)
+
+		pyInstance := C.PyObject_GetAttrString(m.p, cName)
+		if pyInstance == nil {
+			ch <- &Result{ObjectInstance{}, fmt.Errorf("cannot get '%v' instance", name)}
+			return
+		}
+		ch <- &Result{ObjectInstance{Object{p: pyInstance}}, nil}
+	}()
+	res := <-ch
+
+	return res.val, res.err
+}
+
 // Call calls `name` function.
 //  argument type: ...data.Value
 //  return type:   data.Value
