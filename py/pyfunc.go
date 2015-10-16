@@ -2,6 +2,14 @@ package py
 
 /*
 #include "Python.h"
+
+char const* getErrString()
+{
+  // TODO: consider to use dummy/dummy2. They may contain useful information for users.
+  PyObject *dummy, *o, *dummy2;
+  PyErr_Fetch(&dummy, &o, &dummy2);
+  return PyString_AsString(o);
+}
 */
 import "C"
 import (
@@ -11,6 +19,11 @@ import (
 	"runtime"
 	"unsafe"
 )
+
+func getErrString() string {
+	s := C.getErrString()
+	return C.GoString(s)
+}
 
 // ObjectFunc is a bind of `PyObject` used as `PyFunc`
 type ObjectFunc struct {
@@ -86,22 +99,15 @@ func invoke(pyObj *C.PyObject, name string, args ...data.Value) (data.Value, err
 		}
 		defer pyFunc.decRef()
 
-		pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
-		defer C.Py_DecRef(pyArg)
-
-		for i, v := range args {
-			o, err := newPyObj(v)
-			if err != nil {
-				ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
-				return
-			}
-			// PyTuple object takes over the value's reference, and not need to
-			// decrease reference counter.
-			C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
+		pyArg, err := convertArgsGo2Py(args)
+		if err != nil {
+			ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
+			return
 		}
+		defer pyArg.decRef()
 
-		ret, err := pyFunc.callObject(Object{p: pyArg})
-		if ret.p == nil && err != nil {
+		ret, err := pyFunc.callObject(pyArg)
+		if err != nil {
 			ch <- &Result{res, fmt.Errorf("%v in '%v'", err.Error(), name)}
 			return
 		}
@@ -136,12 +142,33 @@ func getPyFunc(pyObj *C.PyObject, name string) (ObjectFunc, error) {
 // `PyObject` even if result values are more than one. When a value will be set
 // directory, and values will be set as a `PyTuple` object.
 func (f *ObjectFunc) callObject(arg Object) (po Object, err error) {
-	po = Object{}
-	pyValue, err := C.PyObject_CallObject(f.p, arg.p)
-	if pyValue == nil && err != nil {
-		err = fmt.Errorf("call function error: %v", err)
-	} else {
-		po.p = pyValue
+	po = Object{
+		p: C.PyObject_CallObject(f.p, arg.p),
 	}
-	return po, err
+	if po.p == nil {
+		pyerr := getErrString()
+		err = fmt.Errorf("calling python function failed: %v", pyerr)
+	}
+	return
+}
+
+func convertArgsGo2Py(args []data.Value) (Object, error) {
+	pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
+	shouldDecRef := true
+	defer func() {
+		if shouldDecRef {
+			C.Py_DecRef(pyArg)
+		}
+	}()
+	for i, v := range args {
+		o, err := newPyObj(v)
+		if err != nil {
+			return Object{}, err
+		}
+		// PyTuple object takes over the value's reference, and not need to
+		// decrease reference counter.
+		C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
+	}
+	shouldDecRef = false
+	return Object{pyArg}, nil
 }
