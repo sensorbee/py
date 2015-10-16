@@ -17,13 +17,16 @@ from chainer import optimizers
 
 class MNIST(object):
 
-    def __init__(self, model_path, gpu):
-        self.gpu = gpu
+    def __init__(self, params):
+        if 'gpu' in params:
+            self.gpu = params['gpu']
+        else:
+            self.gpu = -1
 
         n_units = 1000
 
-        if model_path != '':
-            with open(model_path, 'rb') as model_pickle:
+        if 'model_file_path' in params:
+            with open(params['model_file_path'], 'rb') as model_pickle:
                 self.model = six.moves.cPickle.load(model_pickle)
         else:
             self.model = FunctionSet(
