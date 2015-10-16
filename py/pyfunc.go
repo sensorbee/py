@@ -18,7 +18,7 @@ type ObjectFunc struct {
 }
 
 // invokeDirect calls name's function. User needs to call DecRef.
-// This Returns a Object even if result values are more thane one.
+// This returns an Object even if result values are more than one.
 // For example, use to get the object of the class instance that method returned.
 func invokeDirect(pyObj *C.PyObject, name string, args []data.Value) (Object, error) {
 	type Result struct {
@@ -133,7 +133,7 @@ func getPyFunc(pyObj *C.PyObject, name string) (ObjectFunc, error) {
 }
 
 // callObject executes python function, using `PyObject_CallObject`. Returns a
-// `PyObject` even if result values are more thane one. When a value will be set
+// `PyObject` even if result values are more than one. When a value will be set
 // directory, and values will be set as a `PyTuple` object.
 func (f *ObjectFunc) callObject(arg Object) (po Object, err error) {
 	po = Object{}
