@@ -17,7 +17,9 @@ func TestPyFunc(t *testing.T) {
 
 		obj, err := mdl.NewInstance("negator")
 		So(err, ShouldBeNil)
-		defer obj.DecRef()
+		Reset(func() {
+			obj.DecRef()
+		})
 		negator := ObjectFunc{obj.Object}
 
 		Convey("When calling a function object properly", func() {
@@ -25,14 +27,18 @@ func TestPyFunc(t *testing.T) {
 				return convertArgsGo2Py([]data.Value{data.Int(1)})
 			})
 			So(err, ShouldBeNil)
-			defer arg.DecRef()
+			Reset(func() {
+				arg.DecRef()
+			})
 
 			ret, err := safePythonCall(func() (Object, error) {
 				return negator.callObject(arg)
 			})
 			Convey("it should succeed.", func() {
 				So(err, ShouldBeNil)
-				defer ret.DecRef()
+				Reset(func() {
+					ret.DecRef()
+				})
 			})
 		})
 
@@ -41,7 +47,9 @@ func TestPyFunc(t *testing.T) {
 				return convertArgsGo2Py(nil)
 			})
 			So(err, ShouldBeNil)
-			defer badArg.DecRef()
+			Reset(func() {
+				badArg.DecRef()
+			})
 
 			ret2, err := safePythonCall(func() (Object, error) {
 				return negator.callObject(badArg)
