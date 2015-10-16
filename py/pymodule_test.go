@@ -139,7 +139,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				ins := &ObjectInstance{obj}
 				actual, err := ins.Call("get_instance_str")
 				So(err, ShouldBeNil)
-				So(actual, ShouldEqual, "instance method")
+				So(actual, ShouldEqual, "instance method test1")
 			})
 		})
 

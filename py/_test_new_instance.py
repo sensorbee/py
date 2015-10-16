@@ -31,14 +31,16 @@ class PythonTest3():
 
     @staticmethod
     def get_instance():
-        return PythonTest3()
+        ins = PythonTest3()
+        ins.val1 = "test1"
+        return ins
 
     @classmethod
     def get_class_value(cls):
         return cls.v
 
     def get_instance_str(self):
-        return "instance method"
+        return "instance method " + self.val1
 
 
 class ChildClass(PythonTest3):
