@@ -20,7 +20,7 @@ type ObjectFunc struct {
 // invokeDirect calls name's function. User needs to call DecRef.
 // This returns an Object even if result values are more than one.
 // For example, use to get the object of the class instance that method returned.
-func invokeDirect(pyObj *C.PyObject, name string, args []data.Value) (Object, error) {
+func invokeDirect(pyObj *C.PyObject, name string, args ...data.Value) (Object, error) {
 	type Result struct {
 		val Object
 		err error
@@ -67,7 +67,7 @@ func invokeDirect(pyObj *C.PyObject, name string, args []data.Value) (Object, er
 }
 
 // invoke name's function. TODO should be placed at internal package.
-func invoke(pyObj *C.PyObject, name string, args []data.Value) (data.Value, error) {
+func invoke(pyObj *C.PyObject, name string, args ...data.Value) (data.Value, error) {
 	type Result struct {
 		val data.Value
 		err error
