@@ -128,9 +128,9 @@ func TestNewInstanceAndStateness(t *testing.T) {
 			})
 
 			Convey("Then process should get a string", func() {
-				actual, err := class.Call("get_str")
+				actual, err := class.Call("get_static_value")
 				So(err, ShouldBeNil)
-				So(actual, ShouldEqual, "staticmethod")
+				So(actual, ShouldEqual, "class_value")
 			})
 
 			Convey("Then process should get a new instance", func() {
@@ -140,6 +140,22 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				actual, err := ins.Call("get_instance_str")
 				So(err, ShouldBeNil)
 				So(actual, ShouldEqual, "instance method")
+			})
+		})
+
+		Convey("When get a new child class of PythonTest3 instance", func() {
+			class, err := mdl.GetClass("ChildClass")
+			Convey("Then process should get ChildClass class", func() {
+				So(err, ShouldBeNil)
+			})
+			Reset(func() {
+				class.DecRef()
+			})
+
+			Convey("Then process should get a string", func() {
+				actual, err := class.Call("get_class_value")
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "instance_value")
 			})
 		})
 	})
