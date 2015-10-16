@@ -25,7 +25,7 @@ type PyMLState struct {
 
 // NewPyMLState creates `core.SharedState` for multiple layer classification.
 func NewPyMLState(modulePathName, moduleName, className string, batchSize int,
-	modelPath string, gpuID int) (*PyMLState, error) {
+	params data.Map) (*PyMLState, error) {
 	py.ImportSysAndAppendPath(modulePathName)
 
 	mdl, err := py.LoadModule(moduleName)
@@ -34,7 +34,7 @@ func NewPyMLState(modulePathName, moduleName, className string, batchSize int,
 	}
 	defer mdl.DecRef()
 
-	ins, err := mdl.NewInstance(className, data.String(modelPath), data.Int(gpuID))
+	ins, err := mdl.NewInstance(className, params)
 	if err != nil {
 		return nil, err
 	}
