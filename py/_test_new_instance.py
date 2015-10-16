@@ -20,3 +20,29 @@ class PythonTest2(object):
 
     def get_a(self):
         return self.a
+
+
+class PythonTest3():
+    v = "class_value"
+
+    @staticmethod
+    def get_static_value():
+        return PythonTest3.v
+
+    @staticmethod
+    def get_instance():
+        ins = PythonTest3()
+        ins.val1 = "test1"
+        return ins
+
+    @classmethod
+    def get_class_value(cls):
+        return cls.v
+
+    def get_instance_str(self):
+        return "instance method " + self.val1
+
+
+class ChildClass(PythonTest3):
+    v = "instance_value"
+    # ChildClass.get_class_value() will return "instance_value"

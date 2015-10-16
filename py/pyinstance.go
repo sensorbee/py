@@ -17,5 +17,14 @@ type ObjectInstance struct {
 //  argument type: ...data.Value
 //  return type:   data.Value
 func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value, error) {
-	return invoke(ins.p, name, args)
+	return invoke(ins.p, name, args...)
+}
+
+// Call calls `name` function.
+//  argument type: ...data.Value
+//  return type:   Object.
+//
+// This method is suitable for getting the instance object that called method returned.
+func (ins *ObjectInstance) CallDirect(name string, args ...data.Value) (Object, error) {
+	return invokeDirect(ins.p, name, args...)
 }
