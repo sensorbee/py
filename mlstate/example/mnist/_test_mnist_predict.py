@@ -29,7 +29,7 @@ y_train, y_test = np.split(mnist['target'], [N])
 N_test = y_test.size
 
 # Neural net architecture
-mf = m.MNIST('mnist_model.pkl', args.gpu)
+mf = m.MNIST({'model_file_path': 'mnist_model.pkl', 'gpu': args.gpu})
 
 # evaluation
 acc_cnt = 0
