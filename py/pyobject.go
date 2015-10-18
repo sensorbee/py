@@ -2,6 +2,9 @@ package py
 
 /*
 #include "Python.h"
+void XDecRef(PyObject *o) {
+  Py_XDECREF(o);
+}
 */
 import "C"
 import (
@@ -16,6 +19,7 @@ type Object struct {
 // DecRef decrease reference counter of `C.PyObject`
 // This function is public for API users and
 // it acquires GIL of Python interpreter.
+// User can call whenever target object is null.
 func (o *Object) DecRef() {
 	ch := make(chan bool, 1)
 	go func() {
@@ -23,7 +27,7 @@ func (o *Object) DecRef() {
 		state := GILState_Ensure()
 		defer GILState_Release(state)
 
-		C.Py_DecRef(o.p)
+		C.XDecRef(o.p)
 		ch <- true
 	}()
 	<-ch
