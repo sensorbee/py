@@ -19,7 +19,7 @@ type Object struct {
 // DecRef decrease reference counter of `C.PyObject`
 // This function is public for API users and
 // it acquires GIL of Python interpreter.
-// User can call whenever target object is null.
+// A user can safely call this method even when its target object is null.
 func (o *Object) DecRef() {
 	ch := make(chan bool, 1)
 	go func() {
