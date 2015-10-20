@@ -30,6 +30,7 @@ import (
 func init() {
 	// Lock Native thread for initializing python
 	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	// PyDateTime_IMPORT requires python initialized interpreter and
 	// need to call Initialize.
