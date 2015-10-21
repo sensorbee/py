@@ -18,25 +18,30 @@ import (
 	"unsafe"
 )
 
-// initialize python interpreter and GIL.
-func initialize() error {
+// initAndLockPython initializes the python interpreter if needed and acquires GIL.
+// This function is for the package's init()s which use the python interpreter.
+// Each init()s must release GIL after using the interpreter.
+func initAndLockPython() (*C.PyThreadState, error) {
 	if C.Py_IsInitialized() == 0 {
 		C.Py_Initialize()
 	}
 
 	if C.Py_IsInitialized() == 0 {
-		return fmt.Errorf("cannot initialize python command")
+		return nil, fmt.Errorf("cannot initialize python command")
 	}
 
 	if C.PyEval_ThreadsInitialized() == 0 {
+		// PyEval_InitThreads acquires GIL.
 		C.PyEval_InitThreads()
+		if C.PyEval_ThreadsInitialized() == 0 {
+			return nil, fmt.Errorf("cannot initialize GIL")
+		}
+		return C.PyGILState_GetThisThreadState(), nil
 	}
 
-	if C.PyEval_ThreadsInitialized() == 0 {
-		return fmt.Errorf("cannot initialize GIL")
-	}
-
-	return nil
+	var tstate C.PyThreadState
+	C.PyEval_AcquireThread(&tstate)
+	return &tstate, nil
 }
 
 func GILState_Ensure() int {
