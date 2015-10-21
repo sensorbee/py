@@ -32,17 +32,14 @@ func init() {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	// PyDateTime_IMPORT requires python initialized interpreter and
-	// need to call Initialize.
-	if err := initialize(); err != nil {
+	// PyDateTime_IMPORT requires initialized python interpreter and GIL.
+	tstate, err := initAndLockPython()
+	if err != nil {
 		panic(err)
 	}
+	defer C.PyEval_ReleaseThread(tstate)
 
 	C.init_PyDateTime()
-
-	// Release GIL from this thread
-	tstate := C.PyGILState_GetThisThreadState()
-	C.PyEval_ReleaseThread(tstate)
 }
 
 func IsPyTypeDateTime(o *C.PyObject) bool {
