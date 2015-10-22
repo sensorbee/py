@@ -33,11 +33,11 @@ func init() {
 	defer runtime.UnlockOSThread()
 
 	// PyDateTime_IMPORT requires initialized python interpreter and GIL.
-	tstate, err := initAndLockPython()
+	releaseGIL, err := initAndLockPython()
 	if err != nil {
 		panic(err)
 	}
-	defer C.PyEval_ReleaseThread(tstate)
+	defer releaseGIL()
 
 	C.init_PyDateTime()
 }
