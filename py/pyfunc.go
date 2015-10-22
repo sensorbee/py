@@ -40,6 +40,12 @@ func invokeDirect(pyObj *C.PyObject, name string, args ...data.Value) (Object, e
 	}
 	ch := make(chan *Result, 1)
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				ch <- &Result{Object{}, fmt.Errorf("cannot call '%v' due to panic: %v", name, r)}
+			}
+		}()
+
 		runtime.LockOSThread()
 		state := GILState_Ensure()
 		defer GILState_Release(state)
@@ -87,6 +93,12 @@ func invoke(pyObj *C.PyObject, name string, args ...data.Value) (data.Value, err
 	}
 	ch := make(chan *Result, 1)
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				ch <- &Result{data.Null{}, fmt.Errorf("cannot call '%v' due to panic: %v", name, r)}
+			}
+		}()
+
 		runtime.LockOSThread()
 		state := GILState_Ensure()
 		defer GILState_Release(state)
