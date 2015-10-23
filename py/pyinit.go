@@ -20,8 +20,8 @@ import (
 
 // initAndLockPython initializes the python interpreter if needed and acquires GIL.
 // This function is for the package's init()s which use the python interpreter.
-// Each init()s must release GIL after using the interpreter.
-func initAndLockPython() (*C.PyThreadState, error) {
+// Each init()s must release GIL after using the interpreter by calling releaseGIL.
+func initAndLockPython() (releaseGIL func(), err error) {
 	if C.Py_IsInitialized() == 0 {
 		C.Py_Initialize()
 	}
@@ -36,12 +36,17 @@ func initAndLockPython() (*C.PyThreadState, error) {
 		if C.PyEval_ThreadsInitialized() == 0 {
 			return nil, fmt.Errorf("cannot initialize GIL")
 		}
-		return C.PyGILState_GetThisThreadState(), nil
+
+		return func() {
+			tstate := C.PyGILState_GetThisThreadState()
+			C.PyEval_ReleaseThread(tstate)
+		}, nil
 	}
 
-	var tstate C.PyThreadState
-	C.PyEval_AcquireThread(&tstate)
-	return &tstate, nil
+	state := GILState_Ensure()
+	return func() {
+		GILState_Release(state)
+	}, nil
 }
 
 func GILState_Ensure() int {
