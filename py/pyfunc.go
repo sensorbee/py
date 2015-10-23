@@ -73,7 +73,7 @@ func invokeDirect(pyObj *C.PyObject, name string, args ...data.Value) (Object, e
 		}
 
 		ret, err := pyFunc.callObject(Object{p: pyArg})
-		if ret.p == nil && err != nil {
+		if err != nil {
 			ch <- &Result{res, fmt.Errorf("%v in '%v'", err.Error(), name)}
 			return
 		}
