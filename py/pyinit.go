@@ -20,7 +20,7 @@ import (
 
 // initAndLockPython initializes the python interpreter if needed and acquires GIL.
 // This function is for the package's init()s which use the python interpreter.
-// Each init()s must release GIL after using the interpreter.
+// Each init()s must release GIL after using the interpreter by calling releaseGIL.
 func initAndLockPython() (releaseGIL func(), err error) {
 	if C.Py_IsInitialized() == 0 {
 		C.Py_Initialize()
