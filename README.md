@@ -1,4 +1,4 @@
-pystate supports Python module and instance using `Py_Object`.
+py supports Python module and instance using `Py_Object`.
 
 ## Set up to link python
 
@@ -23,7 +23,7 @@ other *.go, for example "pydatetime.go"
 ```
 
 
-Currently pystate use pkg-config to link "Python.h". User needs to set up pkg-config and "python-2.7.pc".
+Currently py package library use pkg-config to link "Python.h". User needs to set up pkg-config and "python-2.7.pc".
 
 * [TODO] currently only support darwin and linux, need to support windows
 * [TODO] support python3

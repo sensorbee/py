@@ -48,7 +48,7 @@ func newPyObj(v data.Value) (Object, error) {
 		pyobj = &C._Py_NoneStruct
 		pyobj.ob_refcnt++
 	default:
-		err = fmt.Errorf("not supported type in pystate: %s", v.Type())
+		err = fmt.Errorf("not supported type in sensorbee/py: %s", v.Type())
 	}
 	return Object{p: pyobj}, err
 }
