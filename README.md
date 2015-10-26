@@ -86,11 +86,25 @@ CREATE STATE sample_module TYPE pystate
 UDF query is written like:
 
 ```sql
-EVAL pystate_func('sample_module', 'sample_method', v1, v2)
+EVAL pystate_func('sample_module', 'sample_method', arg1, arg2, arg3)
 ;
 ```
 
 User must make correspond with python `sample_method` arguments with UDF arguments.
+
+### python code
+
+Those UDS creation query and UDF are same as following python code.
+
+```python
+import sample_module
+
+# same as CREATE STATE
+sm = sample_module.SampleClass({'v1':-1, 'v2':'string'})
+
+# same as EVAL
+sm.sample_method(arg1, arg2, arg3)
+```
 
 ### insert into sink
 
@@ -99,3 +113,34 @@ When a pystate is set "write\_method" value, then the state is writable, and if 
 [TODO] need to discussion default writable specification.
 
 See SensorBee wiki: [Updating a UDS](https://github.pfidev.jp/sensorbee/sensorbee/wiki/How-to-write-%22stateful%22-User-Defined-Functions#updating-a-uds)
+
+## Default Register
+
+User can add original type name pystate. In an application, write like:
+
+```go
+import (
+    "pfi/sensorbee/py"
+)
+
+func init() {
+    py.MustRegisterPythonUDSCreator("org_uds", "lib", "sample_module",
+        "SampleClass", "write_method")
+}
+```
+
+Then user can use `TYPE org_uds` UDS, like:
+
+```sql
+CREATE STATE sample_module TYPE org_uds
+    WITH v1 = -1,
+         v2 = 'string'
+;
+```
+
+User can also use "pystate\_func" same as "pystate"
+
+```sql
+EVAL pystate_func('sample_module', 'sample_method', arg1, arg2, arg3)
+;
+```
