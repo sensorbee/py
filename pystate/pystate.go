@@ -5,6 +5,7 @@ import (
 	py "pfi/sensorbee/py/p"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
+	"sync"
 )
 
 // PyState is python constructor.
@@ -15,6 +16,8 @@ type PyState struct {
 	writeFuncName string
 
 	ins py.ObjectInstance
+
+	mu sync.RWMutex
 }
 
 // New creates `core.SharedState` for python constructor.
@@ -74,6 +77,9 @@ func (s *PyState) Write(ctx *core.Context, t *core.Tuple) error {
 	if s.writeFuncName == "" {
 		return fmt.Errorf("state is not applied for writable")
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	_, err := s.ins.Call(s.writeFuncName, t.Data)
 	return err
 }
@@ -85,6 +91,8 @@ func Func(ctx *core.Context, stateName string, funcName string, dt ...data.Value
 	if err != nil {
 		return nil, err
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	return s.ins.Call(funcName, dt...)
 }
