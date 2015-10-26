@@ -6,8 +6,6 @@ import (
 )
 
 func init() {
-	udf.MustRegisterGlobalUDSCreator("pystate", &pystate.PyStateCreator{})
-
-	udf.MustRegisterGlobalUDF("pystate_func",
-		udf.MustConvertGeneric(pystate.PyMLPredict))
+	udf.MustRegisterGlobalUDSCreator("pystate", &pystate.Creator{})
+	udf.MustRegisterGlobalUDF("pystate_func", udf.MustConvertGeneric(pystate.Func))
 }

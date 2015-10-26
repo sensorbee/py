@@ -7,29 +7,37 @@ import (
 	"pfi/sensorbee/sensorbee/data"
 )
 
-// PyState is python instance specialized to multiple layer classification.
+// PyState is python constructor.
 type PyState struct {
-	modulePath string
-	moduleName string
-	className  string
+	modulePath    string
+	moduleName    string
+	className     string
+	writeFuncName string
 
 	ins py.ObjectInstance
 }
 
-// NewPyState creates `core.SharedState` for multiple layer classification.
-func NewPyState(modulePathName, moduleName, className string, params data.Map) (
-	*PyState, error) {
-	ins, err := newPyInstance(modulePathName, moduleName, className,
-		[]data.Value{params}...)
+// New creates `core.SharedState` for python constructor.
+func New(modulePathName, moduleName, className string, writeFuncName string,
+	params data.Map) (*PyState, error) {
+	var ins py.ObjectInstance
+	var err error
+	if len(params) == 0 {
+		ins, err = newPyInstance(modulePathName, moduleName, className)
+	} else {
+		ins, err = newPyInstance(modulePathName, moduleName, className,
+			[]data.Value{params}...)
+	}
 	if err != nil {
 		return nil, err
 	}
 
 	return &PyState{
-		modulePath: modulePathName,
-		moduleName: moduleName,
-		className:  className,
-		ins:        ins,
+		modulePath:    modulePathName,
+		moduleName:    moduleName,
+		className:     className,
+		writeFuncName: writeFuncName,
+		ins:           ins,
 	}, nil
 }
 
@@ -60,20 +68,25 @@ func (s *PyState) Terminate(ctx *core.Context) error {
 	return nil
 }
 
-// Write and call "fit" function. Tuples is cached per train batch size.
+// Write calls "write" function.
+// TODO should discuss this feature, bucket will be support?
 func (s *PyState) Write(ctx *core.Context, t *core.Tuple) error {
-	// TODO implement
-	return nil
+	if s.writeFuncName == "" {
+		return fmt.Errorf("state is not applied for writable")
+	}
+	_, err := s.ins.Call(s.writeFuncName, t.Data)
+	return err
 }
 
-// PyMLPredict predicts data and return estimate value.
-func PyMLPredict(ctx *core.Context, stateName string, dt data.Value) (data.Value, error) {
+// Func calls instance method and return value.
+func Func(ctx *core.Context, stateName string, funcName string, dt ...data.Value) (
+	data.Value, error) {
 	s, err := lookupPyState(ctx, stateName)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.ins.Call("predict", dt)
+	return s.ins.Call(funcName, dt...)
 }
 
 func lookupPyState(ctx *core.Context, stateName string) (*PyState, error) {

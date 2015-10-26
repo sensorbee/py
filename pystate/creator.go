@@ -12,9 +12,8 @@ var (
 	writeMethodPath = data.MustCompilePath("write_method")
 )
 
-// PyStateCreator is used by BQL to create or load Multiple Layer Classification
-// State as a UDS.
-type PyStateCreator struct {
+// Creator is used by BQL to create state as a UDS.
+type Creator struct {
 }
 
 // CreateState creates `core.SharedState`
@@ -22,11 +21,11 @@ type PyStateCreator struct {
 // * module_path:  Directory path of python module path, default is ''.
 // * module_name:  Python module name, required.
 // * class_name:   Python class name, required.
-// * write_method: [TODO]
+// * write_method: [optional] Python method name when call write in.
 //
 // other rest parameters will set python constructor arguments, the arguments'
 // type is dictionary.
-func (c *PyStateCreator) CreateState(ctx *core.Context, params data.Map) (
+func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
 	var err error
 	mdlPathName := ""
@@ -56,5 +55,13 @@ func (c *PyStateCreator) CreateState(ctx *core.Context, params data.Map) (
 		return nil, err
 	}
 
-	return NewPyState(mdlPathName, moduleName, className, params)
+	writeFuncName := ""
+	if wmn, err := params.Get(writeMethodPath); err == nil {
+		if writeFuncName, err = data.AsString(wmn); err != nil {
+			return nil, err
+		}
+		delete(params, "write_method")
+	}
+
+	return New(mdlPathName, moduleName, className, writeFuncName, params)
 }
