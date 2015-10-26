@@ -2,6 +2,10 @@ package py
 
 /*
 #include "Python.h"
+
+PyObject* getPyNone() {
+  return Py_BuildValue("");
+}
 */
 import "C"
 import (
@@ -44,9 +48,7 @@ func newPyObj(v data.Value) (Object, error) {
 		innerMap, _ := data.AsMap(v)
 		pyobj, err = newPyMap(innerMap)
 	case data.TypeNull:
-		// FIXME: this internal code should not use
-		pyobj = &C._Py_NoneStruct
-		pyobj.ob_refcnt++
+		pyobj = C.getPyNone()
 	default:
 		err = fmt.Errorf("not supported type in sensorbee/py: %s", v.Type())
 	}
