@@ -22,6 +22,13 @@ func TestPyFunc(t *testing.T) {
 		})
 		negator := ObjectFunc{obj.Object}
 
+		alwaysFailObj, err := mdl.NewInstance("alwaysFail")
+		So(err, ShouldBeNil)
+		Reset(func() {
+			alwaysFailObj.DecRef()
+		})
+		alwaysFail := ObjectFunc{alwaysFailObj.Object}
+
 		Convey("When calling a function object properly", func() {
 			arg, err := safePythonCall(func() (Object, error) {
 				return convertArgsGo2Py([]data.Value{data.Int(1)})
@@ -58,6 +65,18 @@ func TestPyFunc(t *testing.T) {
 				So(err, ShouldNotBeNil)
 				So(ret2.p, ShouldBeNil)
 				So(err.Error(), ShouldContainSubstring, "__call__() takes exactly 2 arguments (1 given)")
+			})
+		})
+
+		Convey("When calling a function which divides by zero", func() {
+			ret, err := safePythonCall(func() (Object, error) {
+				return alwaysFail.callObject(Object{nil})
+			})
+			Convey("it should return an error with stacktrace.", func() {
+				So(err, ShouldNotBeNil)
+				So(ret.p, ShouldBeNil)
+				So(err.Error(), ShouldStartWith, "ZeroDivisionError:")
+				So(err.Error(), ShouldContainSubstring, "Traceback (most recent call last):")
 			})
 		})
 	})

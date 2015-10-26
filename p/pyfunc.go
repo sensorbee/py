@@ -2,14 +2,6 @@ package py
 
 /*
 #include "Python.h"
-
-char const* getErrString()
-{
-  // TODO: consider to use dummy/dummy2. They may contain useful information for users.
-  PyObject *dummy, *o, *dummy2;
-  PyErr_Fetch(&dummy, &o, &dummy2);
-  return PyString_AsString(o);
-}
 */
 import "C"
 import (
@@ -19,11 +11,6 @@ import (
 	"runtime"
 	"unsafe"
 )
-
-func getErrString() string {
-	s := C.getErrString()
-	return C.GoString(s)
-}
 
 // ObjectFunc is a bind of `PyObject` used as `PyFunc`
 type ObjectFunc struct {
@@ -158,8 +145,7 @@ func (f *ObjectFunc) callObject(arg Object) (po Object, err error) {
 		p: C.PyObject_CallObject(f.p, arg.p),
 	}
 	if po.p == nil {
-		pyerr := getErrString()
-		err = fmt.Errorf("calling python function failed: %v", pyerr)
+		err = getPyErr()
 	}
 	return
 }
