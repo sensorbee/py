@@ -184,7 +184,7 @@ EVAL my_udf(arg1, arg2)
 ;
 ```
 
-It is sample as following Python code.
+This sample query is same as following Python code.
 
 ```python
 import sample_module
