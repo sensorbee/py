@@ -16,14 +16,18 @@ type PyState interface {
 }
 
 type pyState struct {
-	modulePath    string
-	moduleName    string
-	className     string
-	writeFuncName string
+	modulePath string
+	moduleName string
+	className  string
 
 	ins py.ObjectInstance
 
 	mu sync.RWMutex
+}
+
+type pyWritableState struct {
+	pyState
+	writeFuncName string
 }
 
 func (s *pyState) lock() {
@@ -53,13 +57,20 @@ func New(modulePathName, moduleName, className string, writeFuncName string,
 		return nil, err
 	}
 
-	return &pyState{
-		modulePath:    modulePathName,
-		moduleName:    moduleName,
-		className:     className,
-		writeFuncName: writeFuncName,
-		ins:           ins,
-	}, nil
+	state := pyState{
+		modulePath: modulePathName,
+		moduleName: moduleName,
+		className:  className,
+		ins:        ins,
+	}
+	// check if we have a writable state
+	if writeFuncName != "" {
+		return &pyWritableState{
+			state,
+			writeFuncName,
+		}, nil
+	}
+	return &state, nil
 }
 
 // newPyInstance creates a new Python class instance.
@@ -91,7 +102,7 @@ func (s *pyState) Terminate(ctx *core.Context) error {
 
 // Write calls "write" function.
 // TODO should discuss this feature, bucket will be support?
-func (s *pyState) Write(ctx *core.Context, t *core.Tuple) error {
+func (s *pyWritableState) Write(ctx *core.Context, t *core.Tuple) error {
 	if s.writeFuncName == "" {
 		return fmt.Errorf("state is not applied for writable")
 	}

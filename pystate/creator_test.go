@@ -27,11 +27,6 @@ func TestCreateState(t *testing.T) {
 				So(ok, ShouldBeTrue)
 				So(ps.modulePath, ShouldEqual, "")
 				So(ps.moduleName, ShouldEqual, "_test_creator_module")
-				So(ps.writeFuncName, ShouldEqual, "")
-
-				t := &core.Tuple{}
-				err = ps.Write(ctx, t)
-				So(err, ShouldNotBeNil)
 
 				ctx.SharedStates.Add("creator_test", "creator_test", state)
 				Reset(func() {
@@ -87,7 +82,7 @@ func TestCreateState(t *testing.T) {
 				Reset(func() {
 					state.Terminate(ctx)
 				})
-				ps, ok := state.(*pyState)
+				ps, ok := state.(*pyWritableState)
 				So(ok, ShouldBeTrue)
 				So(ps.writeFuncName, ShouldEqual, "write")
 
