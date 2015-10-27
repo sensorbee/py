@@ -23,7 +23,7 @@ func TestCreateState(t *testing.T) {
 				Reset(func() {
 					state.Terminate(ctx)
 				})
-				ps, ok := state.(*PyState)
+				ps, ok := state.(*pyState)
 				So(ok, ShouldBeTrue)
 				So(ps.modulePath, ShouldEqual, "")
 				So(ps.moduleName, ShouldEqual, "_test_creator_module")
@@ -87,7 +87,7 @@ func TestCreateState(t *testing.T) {
 				Reset(func() {
 					state.Terminate(ctx)
 				})
-				ps, ok := state.(*PyState)
+				ps, ok := state.(*pyState)
 				So(ok, ShouldBeTrue)
 				So(ps.writeFuncName, ShouldEqual, "write")
 

@@ -8,8 +8,14 @@ import (
 	"sync"
 )
 
-// PyState is python constructor.
-type PyState struct {
+type PyState interface {
+	core.SharedState
+	lock()
+	unlock()
+	call(name string, args ...data.Value) (data.Value, error)
+}
+
+type pyState struct {
 	modulePath    string
 	moduleName    string
 	className     string
@@ -20,9 +26,21 @@ type PyState struct {
 	mu sync.RWMutex
 }
 
+func (s *pyState) lock() {
+	s.mu.Lock()
+}
+
+func (s *pyState) unlock() {
+	s.mu.Unlock()
+}
+
+func (s *pyState) call(name string, args ...data.Value) (data.Value, error) {
+	return s.ins.Call(name, args...)
+}
+
 // New creates `core.SharedState` for python constructor.
 func New(modulePathName, moduleName, className string, writeFuncName string,
-	params data.Map) (*PyState, error) {
+	params data.Map) (PyState, error) {
 	var ins py.ObjectInstance
 	var err error
 	if len(params) == 0 {
@@ -35,7 +53,7 @@ func New(modulePathName, moduleName, className string, writeFuncName string,
 		return nil, err
 	}
 
-	return &PyState{
+	return &pyState{
 		modulePath:    modulePathName,
 		moduleName:    moduleName,
 		className:     className,
@@ -66,19 +84,19 @@ func newPyInstance(modulePathName, moduleName, className string, args ...data.Va
 }
 
 // Terminate this state.
-func (s *PyState) Terminate(ctx *core.Context) error {
+func (s *pyState) Terminate(ctx *core.Context) error {
 	s.ins.DecRef()
 	return nil
 }
 
 // Write calls "write" function.
 // TODO should discuss this feature, bucket will be support?
-func (s *PyState) Write(ctx *core.Context, t *core.Tuple) error {
+func (s *pyState) Write(ctx *core.Context, t *core.Tuple) error {
 	if s.writeFuncName == "" {
 		return fmt.Errorf("state is not applied for writable")
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.lock()
+	defer s.unlock()
 
 	_, err := s.ins.Call(s.writeFuncName, t.Data)
 	return err
@@ -91,19 +109,19 @@ func Func(ctx *core.Context, stateName string, funcName string, dt ...data.Value
 	if err != nil {
 		return nil, err
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.lock()
+	defer s.unlock()
 
-	return s.ins.Call(funcName, dt...)
+	return s.call(funcName, dt...)
 }
 
-func lookupPyState(ctx *core.Context, stateName string) (*PyState, error) {
+func lookupPyState(ctx *core.Context, stateName string) (PyState, error) {
 	st, err := ctx.SharedStates.Get(stateName)
 	if err != nil {
 		return nil, err
 	}
 
-	if s, ok := st.(*PyState); ok {
+	if s, ok := st.(PyState); ok {
 		return s, nil
 	}
 
