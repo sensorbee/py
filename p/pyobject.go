@@ -1,4 +1,4 @@
-package py
+package p
 
 /*
 #include "Python.h"

@@ -1,4 +1,4 @@
-package py
+package p
 
 import (
 	"fmt"

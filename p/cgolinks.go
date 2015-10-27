@@ -1,4 +1,4 @@
-package py
+package p
 
 /*
 #cgo pkg-config: python-2.7

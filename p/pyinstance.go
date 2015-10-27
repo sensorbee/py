@@ -1,9 +1,5 @@
-package py
+package p
 
-/*
-#include "Python.h"
-*/
-import "C"
 import (
 	"pfi/sensorbee/sensorbee/data"
 )
@@ -20,7 +16,7 @@ func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value, er
 	return invoke(ins.p, name, args...)
 }
 
-// Call calls `name` function.
+// CallDirect calls `name` function.
 //  argument type: ...data.Value
 //  return type:   Object.
 //
