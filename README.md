@@ -149,7 +149,7 @@ EVAL pystate_func('sample_module', 'sample_method', arg1, arg2, arg3)
 ;
 ```
 
-`MustRegisterPyUDSCreator` is just a alias.
+`MustRegisterPyUDSCreator` is just an alias.
 
 
 ### UDF
