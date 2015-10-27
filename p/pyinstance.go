@@ -1,9 +1,5 @@
 package p
 
-/*
-#include "Python.h"
-*/
-import "C"
 import (
 	"pfi/sensorbee/sensorbee/data"
 )
