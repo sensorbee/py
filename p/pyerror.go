@@ -140,6 +140,8 @@ type pyErr struct {
 	stackTrace   string
 }
 
+// Error returns an error message string for pyErr.
+// This string contains multiple lines for stacktrace.
 func (e *pyErr) Error() string {
 	return e.mainMsg + "\n" + e.syntaxErrMsg + e.stackTrace
 }
