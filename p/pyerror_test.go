@@ -1,4 +1,4 @@
-package py
+package p
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
