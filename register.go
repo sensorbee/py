@@ -23,9 +23,9 @@ func (c *defaultCreator) CreateState(ctx *core.Context, params data.Map) (
 		params)
 }
 
-// MustRegisterPythonUDSCreator is like MustRegisterGlobalUDSCreator for Python
+// MustRegisterPyUDSCreator is like MustRegisterGlobalUDSCreator for Python
 // instance.
-func MustRegisterPythonUDSCreator(typeName string, modulePath string,
+func MustRegisterPyUDSCreator(typeName string, modulePath string,
 	moduleName string, className string, writeMethodName string) {
 	udf.MustRegisterGlobalUDSCreator(typeName, &defaultCreator{
 		modulePath:      modulePath,
