@@ -84,7 +84,7 @@ var syntaxErrorType Object
 func tracebackFormatException(excInfo Object) (Object, error) {
 	formatted := C.PyObject_CallObject(tracebackFormatExceptionFunc.p, excInfo.p)
 	if formatted == nil {
-		return Object{p: nil}, errors.New("TODO")
+		return Object{p: nil}, errors.New("failed to extract error info from Python")
 	}
 	return Object{p: formatted}, nil
 }
@@ -103,7 +103,7 @@ func getPyErr() error {
 
 	formatted, err := tracebackFormatException(excInfo)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer formatted.decRef()
 
