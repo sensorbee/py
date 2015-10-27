@@ -116,6 +116,10 @@ See SensorBee wiki: [Updating a UDS](https://github.pfidev.jp/sensorbee/sensorbe
 
 ## Default Register
 
+py/pystate supports default registration.
+
+### UDS
+
 User can add original type name pystate. In an application, write like:
 
 ```go
@@ -124,12 +128,12 @@ import (
 )
 
 func init() {
-    py.MustRegisterPythonUDSCreator("org_uds", "lib", "sample_module",
+    py.MustRegisterPyUDSCreator("my_uds", "lib", "sample_module",
         "SampleClass", "write_method")
 }
 ```
 
-Then user can use `TYPE org_uds` UDS, like:
+Then user can use `TYPE my_uds` UDS, like:
 
 ```sql
 CREATE STATE sample_module TYPE org_uds
@@ -143,4 +147,47 @@ User can also use "pystate\_func" same as "pystate"
 ```sql
 EVAL pystate_func('sample_module', 'sample_method', arg1, arg2, arg3)
 ;
+```
+
+`MustRegisterPyUDSCreator` is just a alias.
+
+
+### UDF
+
+User can register a python module method directly.
+
+"lib/sample_module.py"
+
+```python
+# module method
+def sample_module_method(arg1, arg2):
+    # do something
+```
+
+In an application, write like:
+
+```go
+import (
+    "pfi/sensorbee/py"
+)
+
+func init() {
+    py.MustRegisterPyUDF("my_udf", "lib", "sample_module",
+        "sample_module_method")
+}
+```
+
+User can `my_udf`.
+
+```sql
+EVAL my_udf(arg1, arg2)
+;
+```
+
+It is sample as following Python code.
+
+```python
+import sample_module
+
+sample_module.sample_module_method(arg1, arg2)
 ```
