@@ -10,6 +10,9 @@ func TestPyError(t *testing.T) {
 		mdl, err := LoadModule("exceptions")
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
+		Reset(func() {
+			mdl.DecRef()
+		})
 
 		syntaxError, err := mdl.GetClass("SyntaxError")
 		So(err, ShouldBeNil)
