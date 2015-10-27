@@ -41,25 +41,25 @@ func init() {
 	}
 	defer releaseGIL()
 
-	if traceback, err := loadModule("traceback"); err != nil {
+	traceback, err := loadModule("traceback")
+	if err != nil {
 		panic(err)
-	} else {
-		tracebackModule = traceback
 	}
-	if formatException, err := getPyFunc(tracebackModule.p, "format_exception"); err != nil {
+	defer traceback.decRef()
+	if formatException, err := getPyFunc(traceback.p, "format_exception"); err != nil {
 		panic(err)
 	} else {
 		tracebackFormatExceptionFunc = formatException
 	}
 
-	if exceptions, err := loadModule("exceptions"); err != nil {
+	exceptions, err := loadModule("exceptions")
+	if err != nil {
 		panic(err)
-	} else {
-		exceptionsModule = exceptions
 	}
+	defer exceptions.decRef()
 	syntaxErrorCString := C.CString("SyntaxError")
 	defer C.free(unsafe.Pointer(syntaxErrorCString))
-	if syntaxError := C.PyObject_GetAttrString(exceptionsModule.p, syntaxErrorCString); syntaxError == nil {
+	if syntaxError := C.PyObject_GetAttrString(exceptions.p, syntaxErrorCString); syntaxError == nil {
 		panic("cannot load exceptions.SyntaxError")
 	} else {
 		syntaxErrorType.p = syntaxError
@@ -77,9 +77,7 @@ func loadModule(name string) (mod ObjectModule, err error) {
 	return
 }
 
-var tracebackModule ObjectModule
 var tracebackFormatExceptionFunc ObjectFunc
-var exceptionsModule ObjectModule
 var syntaxErrorType Object
 
 // tracebackFormatException calls traceback.format_exception().
