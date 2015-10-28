@@ -121,7 +121,7 @@ func getPyErr() error {
 	for i := C.Py_ssize_t(0); i < nTracebackLines; i++ {
 		stackTrace += extractLineFromFormattedErrorMessage(formatted, i)
 	}
-	strings.TrimRightFunc(stackTrace, unicode.IsSpace)
+	stackTrace = strings.TrimRightFunc(stackTrace, unicode.IsSpace)
 	return &pyErr{
 		mainMsg:      mainMsg,
 		syntaxErrMsg: syntaxErr,
