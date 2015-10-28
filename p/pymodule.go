@@ -68,6 +68,10 @@ func (m *ObjectModule) NewInstance(name string, args ...data.Value) (ObjectInsta
 		defer C.Py_DecRef(pyInstance)
 
 		pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
+		if pyArg == nil {
+			ch <- &Result{ObjectInstance{}, getPyErr()}
+			return
+		}
 		defer C.Py_DecRef(pyArg)
 
 		for i, v := range args {

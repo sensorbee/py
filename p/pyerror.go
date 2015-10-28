@@ -8,17 +8,14 @@ PyObject* idOrNone(PyObject* o)
   return o ? o : Py_BuildValue("");
 }
 
-PyObject* fetchPythonError()
+void fetchPythonError(PyObject* excInfo)
 {
   PyObject *type, *value, *traceback;
-  PyObject* ret;
 
   PyErr_Fetch(&type, &value, &traceback);
-  ret = PyTuple_New(3);
-  PyTuple_SetItem(ret, 0, idOrNone(type));
-  PyTuple_SetItem(ret, 1, idOrNone(value));
-  PyTuple_SetItem(ret, 2, idOrNone(traceback));
-  return ret;
+  PyTuple_SetItem(excInfo, 0, idOrNone(type));
+  PyTuple_SetItem(excInfo, 1, idOrNone(value));
+  PyTuple_SetItem(excInfo, 2, idOrNone(traceback));
 }
 */
 import "C"
@@ -98,8 +95,13 @@ func pyObjectToPyTypeObject(p *C.PyObject) *C.PyTypeObject {
 }
 
 func getPyErr() error {
-	excInfo := Object{p: C.fetchPythonError()}
+	// TODO: consider to reserve excInfo
+	excInfo := Object{p: C.PyTuple_New(3)}
+	if excInfo.p == nil {
+		return errors.New("cannot allocate python's tuple")
+	}
 	defer excInfo.decRef()
+	C.fetchPythonError(excInfo.p)
 
 	formatted, err := tracebackFormatException(excInfo)
 	if err != nil {
