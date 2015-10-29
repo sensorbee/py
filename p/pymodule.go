@@ -49,7 +49,7 @@ func LoadModule(name string) (ObjectModule, error) {
 // NewInstance returns `name` constructor.
 func (m *ObjectModule) NewInstance(name string, args ...data.Value) (
 	ObjectInstance, error) {
-	return newInstance(m, name, args...)
+	return newInstance(m, name, nil, args...)
 }
 
 // NewInstanceWithKwd returns 'name' constructor with named arguments.
