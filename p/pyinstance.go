@@ -64,19 +64,13 @@ func newInstance(m *ObjectModule, name string, kwdArgs data.Map,
 		if kwdArgs == nil || len(kwdArgs) == 0 {
 			pyKwdArg = nil
 		} else {
-			pyKwdArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
-			if pyKwdArg == nil {
-				ch <- &Result{ObjectInstance{}, getPyErr()}
-				return
-			}
-			defer C.Py_DecRef(pyKwdArg)
-			dic, err := newPyObj(kwdArgs)
+			o, err := newPyObj(kwdArgs)
 			if err != nil {
 				ch <- &Result{ObjectInstance{}, fmt.Errorf("%v at '%v'", err.Error(),
 					name)}
 				return
 			}
-			C.PyTuple_SetItem(pyKwdArg, C.Py_ssize_t(0), dic.p)
+			pyKwdArg = o.p
 		}
 
 		// no named arguments
@@ -101,7 +95,7 @@ func newInstance(m *ObjectModule, name string, kwdArgs data.Map,
 		ret := C.PyObject_Call(pyInstance, pyArg, pyKwdArg)
 		if ret == nil {
 			ch <- &Result{ObjectInstance{}, fmt.Errorf(
-				"cannot create '%v' instance", name)}
+				"fail to create '%v' instance: %v", name, getPyErr())}
 			return
 		}
 		ch <- &Result{ObjectInstance{Object{p: ret}}, nil}
