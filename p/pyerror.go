@@ -95,10 +95,19 @@ func pyObjectToPyTypeObject(p *C.PyObject) *C.PyTypeObject {
 }
 
 func getPyErr() error {
+	if isPyNoMemoryError() {
+		// Fetching stacktrace requires some memory,
+		// so just return an error without stacktrace.
+		return pyNoMemoryError
+	}
+
 	// TODO: consider to reserve excInfo
 	excInfo := Object{p: C.PyTuple_New(3)}
 	if excInfo.p == nil {
-		return errors.New("cannot allocate python's tuple")
+		if isPyNoMemoryError() {
+			return pyNoMemoryError
+		}
+		return getPyErr()
 	}
 	defer excInfo.decRef()
 	C.fetchPythonError(excInfo.p)
@@ -147,3 +156,11 @@ type pyErr struct {
 func (e *pyErr) Error() string {
 	return e.mainMsg + "\n" + e.syntaxErrMsg + e.stackTrace
 }
+
+func isPyNoMemoryError() bool {
+	return C.PyErr_ExceptionMatches(C.PyExc_MemoryError) != 0
+}
+
+// pyNoMemoryError is an error value representing an allocation error on Python.
+// This is not a pyErr because it is difficult to extract stacktrace from Python when the heap is exhaused.
+var pyNoMemoryError = errors.New("python interpreter failed to allocate memory")
