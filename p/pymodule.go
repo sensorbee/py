@@ -47,12 +47,54 @@ func LoadModule(name string) (ObjectModule, error) {
 }
 
 // NewInstance returns `name` constructor.
+//
+//  ```python
+//  class Sample(object):
+//  	def __init__(self, a, b=5):
+//  		# initializing
+//  ```
+//
+// To get that "Sample" python instance, callers use this function like:
+//  NewInstance("Sample", data.Value, data.Int)
+// or
+//  NewInstance("Sample", data.Value) // value "b" is optional and will set 5
 func (m *ObjectModule) NewInstance(name string, args ...data.Value) (
 	ObjectInstance, error) {
 	return newInstance(m, name, nil, args...)
 }
 
 // NewInstanceWithKwd returns 'name' constructor with named arguments.
+//
+//  ```python
+//  class Sample(object):
+//  	def __init__(self, a, b=5, **c):
+//  		# initializing
+//  ```
+//
+// To get that "Sample" python instance, callers use a map object as named
+// arguments, like:
+//
+//  arg1 := data.Map{
+//  	"a":     data.Value, // ex) data.String("v1")
+//  	"b":     data.Int,   // ex) data.Int(5)
+//  	"hoge1": data.Value, // ex) data.Float(100.0)
+//  	"hoge2": data.Value, // ex) data.True
+//  }
+// `arg1` is same as `Sawmple(a-'v1', b=5, hoge1=100.0, hoge2=True)`.
+//
+//  arg2 := data.Map{
+//  	"a":     data.Value, // ex) data.String("v1")
+//  	"hoge1": data.Value, // ex) data.Float(100.0)
+//  	"hoge2": data.Value, // ex) data.True
+//  }
+// `arg2` is same as `Sample(a='v1', hoge1=100.0, hoge2=True)`, and `self.b`
+// will be set default value (=5).
+//
+//  arg3 := data.Map{
+//  	"a": data.Value, // ex) data.String("v1")
+//  }
+// `arg3` is same as `Sample(a='v1')`, `self.b` will be set default value (=5),
+// and `self.c` will be set `{}`
 func (m *ObjectModule) NewInstanceWithKwd(name string, kwdArgs data.Map) (
 	ObjectInstance, error) {
 	return newInstance(m, name, kwdArgs)
