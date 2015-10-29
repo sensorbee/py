@@ -104,14 +104,14 @@ func getPyErr() error {
 	if isPyNoMemoryError() {
 		// Fetching stacktrace requires some memory,
 		// so just return an error without stacktrace.
-		return pyNoMemoryError
+		return errPyNoMemory
 	}
 
 	// TODO: consider to reserve excInfo
 	excInfo := Object{p: C.PyTuple_New(3)}
 	if excInfo.p == nil {
 		if isPyNoMemoryError() {
-			return pyNoMemoryError
+			return errPyNoMemory
 		}
 		return getPyErr()
 	}
@@ -168,6 +168,6 @@ func isPyNoMemoryError() bool {
 	return C.PyErr_ExceptionMatches(C.PyExc_MemoryError) != 0
 }
 
-// pyNoMemoryError is an error value representing an allocation error on Python.
+// errPyNoMemory is an error value representing an allocation error on Python.
 // This is not a pyErr because it is difficult to extract stacktrace from Python when the heap is exhaused.
-var pyNoMemoryError = errors.New("python interpreter failed to allocate memory")
+var errPyNoMemory = errors.New("python interpreter failed to allocate memory")
