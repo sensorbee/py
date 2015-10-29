@@ -24,7 +24,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 
 		Convey("When get a new test python instance", func() {
 			ins, err := mdl.NewInstance("PythonTest")
-			Convey("Then process should get PyModule", func() {
+			Convey("Then process should get a python instance from the module", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
 				Reset(func() {
@@ -47,7 +47,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 
 						Convey("And when get a new test python instance", func() {
 							ins2, err := mdl.NewInstance("PythonTest")
-							Convey("Then process should get PyModule", func() {
+							Convey("Then process should get another instance from the module", func() {
 								So(err, ShouldBeNil)
 								So(ins2, ShouldNotBeNil)
 								Reset(func() {
@@ -156,6 +156,97 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				actual, err := class.Call("get_class_value")
 				So(err, ShouldBeNil)
 				So(actual, ShouldEqual, "instance_value")
+			})
+		})
+	})
+}
+
+func TestNewInstanceWithKwd(t *testing.T) {
+	Convey("Given an initialized python module", t, func() {
+
+		ImportSysAndAppendPath("")
+
+		mdl, err := LoadModule("_test_new_instance")
+		So(err, ShouldBeNil)
+		So(mdl, ShouldNotBeNil)
+
+		Convey("When get an invalid class instance", func() {
+			_, err := mdl.NewInstanceWithKwd("NonexistentClass", nil)
+			Convey("Then an error should be occurred", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "AttributeError")
+			})
+		})
+
+		Convey("When get a net test python instance with nil", func() {
+			ins, err := mdl.NewInstanceWithKwd("PythonTest", nil)
+			Convey("Then process should get a python instance from the module", func() {
+				So(err, ShouldBeNil)
+				So(ins, ShouldNotBeNil)
+				Reset(func() {
+					ins.DecRef()
+				})
+			})
+		})
+
+		Convey("When get a new test python instance with empty map", func() {
+			ins, err := mdl.NewInstanceWithKwd("PythonTest", data.Map{})
+			Convey("Then process should get a python instance from the module", func() {
+				So(err, ShouldBeNil)
+				So(ins, ShouldNotBeNil)
+				Reset(func() {
+					ins.DecRef()
+				})
+			})
+		})
+
+		Convey("When get a new test python instance with named arguments", func() {
+			arg := data.Map{
+				"a": data.Int(1),
+				"b": data.Int(2),
+				"c": data.Int(3),
+				"d": data.Int(4),
+			}
+			ins, err := mdl.NewInstanceWithKwd("PythonTestForKwd", arg)
+
+			Convey("Then process should get instance and set values", func() {
+				So(err, ShouldBeNil)
+				So(ins, ShouldNotBeNil)
+				Reset(func() {
+					ins.DecRef()
+				})
+
+				actual, err := ins.Call("confirm_init")
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "1_2_{'c': 3, 'd': 4}")
+			})
+		})
+
+		Convey("When get a new test python instance with named arguments which lacks optional value", func() {
+			arg := data.Map{
+				"a": data.Int(1),
+			}
+			ins, err := mdl.NewInstanceWithKwd("PythonTestForKwd", arg)
+
+			Convey("Then process should get instance and set values", func() {
+				So(err, ShouldBeNil)
+				So(ins, ShouldNotBeNil)
+				Reset(func() {
+					ins.DecRef()
+				})
+
+				actual, err := ins.Call("confirm_init")
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "1_5_{}")
+			})
+		})
+
+		Convey("When constructor arguments lacks required value", func() {
+			_, err := mdl.NewInstanceWithKwd("PythonTestForKwd", data.Map{})
+
+			Convey("Then an error should be get", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "TypeError")
 			})
 		})
 	})
