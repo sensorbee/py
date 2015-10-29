@@ -63,6 +63,9 @@ func newPyString(s string) *C.PyObject {
 
 func newPyArray(a data.Array) (*C.PyObject, error) {
 	pylist := C.PyList_New(C.Py_ssize_t(len(a)))
+	if pylist == nil {
+		return nil, getPyErr()
+	}
 	for i, v := range a {
 		value, err := newPyObj(v)
 		if err != nil {
@@ -77,6 +80,9 @@ func newPyArray(a data.Array) (*C.PyObject, error) {
 
 func newPyMap(m data.Map) (*C.PyObject, error) {
 	pydict := C.PyDict_New()
+	if pydict == nil {
+		return nil, getPyErr()
+	}
 	for k, v := range m {
 		err := func() error {
 			key := newPyString(k)

@@ -46,6 +46,10 @@ func invokeDirect(pyObj *C.PyObject, name string, args ...data.Value) (Object, e
 		defer pyFunc.decRef()
 
 		pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
+		if pyArg == nil {
+			ch <- &Result{res, getPyErr()}
+			return
+		}
 		defer C.Py_DecRef(pyArg)
 
 		for i, v := range args {
@@ -152,6 +156,9 @@ func (f *ObjectFunc) callObject(arg Object) (po Object, err error) {
 
 func convertArgsGo2Py(args []data.Value) (Object, error) {
 	pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
+	if pyArg == nil {
+		return Object{}, getPyErr()
+	}
 	shouldDecRef := true
 	defer func() {
 		if shouldDecRef {

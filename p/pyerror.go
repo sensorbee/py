@@ -8,17 +8,14 @@ PyObject* idOrNone(PyObject* o)
   return o ? o : Py_BuildValue("");
 }
 
-PyObject* fetchPythonError()
+void fetchPythonError(PyObject* excInfo)
 {
   PyObject *type, *value, *traceback;
-  PyObject* ret;
 
   PyErr_Fetch(&type, &value, &traceback);
-  ret = PyTuple_New(3);
-  PyTuple_SetItem(ret, 0, idOrNone(type));
-  PyTuple_SetItem(ret, 1, idOrNone(value));
-  PyTuple_SetItem(ret, 2, idOrNone(traceback));
-  return ret;
+  PyTuple_SetItem(excInfo, 0, idOrNone(type));
+  PyTuple_SetItem(excInfo, 1, idOrNone(value));
+  PyTuple_SetItem(excInfo, 2, idOrNone(traceback));
 }
 */
 import "C"
@@ -97,9 +94,29 @@ func pyObjectToPyTypeObject(p *C.PyObject) *C.PyTypeObject {
 	return (*C.PyTypeObject)(unsafe.Pointer(p))
 }
 
+// getPyErr returns a Python's exception as an error.
+// getPyErr normally returns a pyErr (see its godoc for details) and clears
+// exception state of the python interpreter. If the exception is a MemoryError,
+// getPyErr returns pyNoMemoryError (without stacktrace) and does not clears
+// the exception state. The easiest way to extract stacktrace for MemoryError
+// is calling PyErr_Print(). Note that PyErr_Print() prints to stderr.
 func getPyErr() error {
-	excInfo := Object{p: C.fetchPythonError()}
+	if isPyNoMemoryError() {
+		// Fetching stacktrace requires some memory,
+		// so just return an error without stacktrace.
+		return errPyNoMemory
+	}
+
+	// TODO: consider to reserve excInfo
+	excInfo := Object{p: C.PyTuple_New(3)}
+	if excInfo.p == nil {
+		if isPyNoMemoryError() {
+			return errPyNoMemory
+		}
+		return getPyErr()
+	}
 	defer excInfo.decRef()
+	C.fetchPythonError(excInfo.p)
 
 	formatted, err := tracebackFormatException(excInfo)
 	if err != nil {
@@ -134,10 +151,11 @@ func extractLineFromFormattedErrorMessage(formatted Object, n C.Py_ssize_t) stri
 	return C.GoString(C.PyString_AsString(line))
 }
 
+// pyErr represents an exception of python.
 type pyErr struct {
-	mainMsg      string
-	syntaxErrMsg string
-	stackTrace   string
+	mainMsg      string // "main error message" (one line)
+	syntaxErrMsg string // syntax error description for SyntaxError (zero or two lines)
+	stackTrace   string // stacktrace (zero or multiple lines)
 }
 
 // Error returns an error message string for pyErr.
@@ -145,3 +163,11 @@ type pyErr struct {
 func (e *pyErr) Error() string {
 	return e.mainMsg + "\n" + e.syntaxErrMsg + e.stackTrace
 }
+
+func isPyNoMemoryError() bool {
+	return C.PyErr_ExceptionMatches(C.PyExc_MemoryError) != 0
+}
+
+// errPyNoMemory is an error value representing an allocation error on Python.
+// This is not a pyErr because it is difficult to extract stacktrace from Python when the heap is exhaused.
+var errPyNoMemory = errors.New("python interpreter failed to allocate memory")
