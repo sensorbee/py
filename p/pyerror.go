@@ -94,6 +94,12 @@ func pyObjectToPyTypeObject(p *C.PyObject) *C.PyTypeObject {
 	return (*C.PyTypeObject)(unsafe.Pointer(p))
 }
 
+// getPyErr returns a Python's exception as an error.
+// getPyErr normally returns a pyErr (see its godoc for details) and clears
+// exception state of the python interpreter. If the exception is a MemoryError,
+// getPyErr returns pyNoMemoryError (without stacktrace) and does not clears
+// the exception state. The easiest way to extract stacktrace for MemoryError
+// is calling PyErr_Print(). Note that PyErr_Print() prints to stderr.
 func getPyErr() error {
 	if isPyNoMemoryError() {
 		// Fetching stacktrace requires some memory,
@@ -145,10 +151,11 @@ func extractLineFromFormattedErrorMessage(formatted Object, n C.Py_ssize_t) stri
 	return C.GoString(C.PyString_AsString(line))
 }
 
+// pyErr represents an exception of python.
 type pyErr struct {
-	mainMsg      string
-	syntaxErrMsg string
-	stackTrace   string
+	mainMsg      string // "main error message" (one line)
+	syntaxErrMsg string // syntax error description for SyntaxError (zero or two lines)
+	stackTrace   string // stacktrace (zero or multiple lines)
 }
 
 // Error returns an error message string for pyErr.
