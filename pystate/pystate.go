@@ -45,14 +45,8 @@ func (s *pyState) call(name string, args ...data.Value) (data.Value, error) {
 // New creates `core.SharedState` for python constructor.
 func New(modulePathName, moduleName, className string, writeFuncName string,
 	params data.Map) (PyState, error) {
-	var ins py.ObjectInstance
-	var err error
-	if len(params) == 0 {
-		ins, err = newPyInstance(modulePathName, moduleName, className)
-	} else {
-		ins, err = newPyInstance(modulePathName, moduleName, className,
-			[]data.Value{params}...)
-	}
+
+	ins, err := newPyInstance(modulePathName, moduleName, className, params)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +69,7 @@ func New(modulePathName, moduleName, className string, writeFuncName string,
 
 // newPyInstance creates a new Python class instance.
 // User must call DecRef method to release a resource.
-func newPyInstance(modulePathName, moduleName, className string, args ...data.Value) (
+func newPyInstance(modulePathName, moduleName, className string, args data.Map) (
 	py.ObjectInstance, error) {
 	var null py.ObjectInstance
 	py.ImportSysAndAppendPath(modulePathName)
@@ -86,7 +80,7 @@ func newPyInstance(modulePathName, moduleName, className string, args ...data.Va
 	}
 	defer mdl.DecRef()
 
-	ins, err := mdl.NewInstance(className, args...)
+	ins, err := mdl.NewInstanceWithKwd(className, args)
 	if err != nil {
 		return null, err
 	}

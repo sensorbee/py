@@ -54,13 +54,15 @@ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -v 2.7.9
 
 ```python
 class SampleClass(object):
-    def __init__(self, params):
-        # params is dictionary
+    def __init__(self, arg1, arg2='arg2', arg3='arg3', **arg4):
+        # initializing
         # blow BQL sample will set like:
-        #  params['v1'] = -1
-        #  params['v2'] = 'string'
+        # arg1 = 'arg1'
+        # arg2 = 'arg2' # default value
+        # arg3 = 'arg3a' # overwritten
+        # arg4 = {'new_arg1':1, 'new_arg2':'2'} # variable named arguments
 
-    def sample_method(self, v1, v2):
+    def sample_method(self, v1, v2, v3):
         # do something
 
     def write_method(self, value):
@@ -76,8 +78,10 @@ CREATE STATE sample_module TYPE pystate
          class_name = 'SampleClass',  -- required
          write_method = 'write_method', -- optional
          -- rest parameters are used for initializing constructor arguments.
-         v1 = -1,
-         v2 = 'string'
+         arg1 = 'arg1',
+         arg3 = 'arg3a',
+         new_arg1 = 1,
+         new_arg2 = '2'
 ;
 ```
 
@@ -100,7 +104,7 @@ Those UDS creation query and UDF are same as following python code.
 import sample_module
 
 # same as CREATE STATE
-sm = sample_module.SampleClass({'v1':-1, 'v2':'string'})
+sm = sample_module.SampleClass(arg1='arg1', arg3='arg3a', new_arg1=1, new_arg2='2')
 
 # same as EVAL
 sm.sample_method(arg1, arg2, arg3)

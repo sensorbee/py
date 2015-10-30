@@ -46,3 +46,14 @@ class PythonTest3():
 class ChildClass(PythonTest3):
     v = "instance_value"
     # ChildClass.get_class_value() will return "instance_value"
+
+
+class PythonTestForKwd(object):
+
+    def __init__(self, a, b=5, **c):
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def confirm_init(self):
+        return str(self.a) + '_' + str(self.b) + '_' + str(self.c)
