@@ -128,7 +128,7 @@ func getPyErr() error {
 	mainMsg := strings.TrimSpace(extractLineFromFormattedErrorMessage(formatted, ln-1))
 	syntaxErr := ""
 	nTracebackLines := ln - 1
-	if isSyntaxError(C.PyTuple_GetItem(excInfo.p, 0)) {
+	if isSyntaxError(C.PyTuple_GetItem(excInfo.p, 0)) && ln > 2 {
 		firstLine := extractLineFromFormattedErrorMessage(formatted, ln-3)
 		secondLine := extractLineFromFormattedErrorMessage(formatted, ln-2)
 		syntaxErr = firstLine + secondLine

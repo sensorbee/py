@@ -18,7 +18,7 @@ func TestLoadModuleError(t *testing.T) {
 			})
 		})
 
-		SkipConvey("When get syntax error module", func() {
+		Convey("When get syntax error module", func() {
 			_, err := LoadModule("_test_syntax_error")
 			Convey("Then an error should be occurred", func() {
 				So(err, ShouldNotBeNil)
