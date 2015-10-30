@@ -52,6 +52,7 @@ func TestCreateState(t *testing.T) {
 				"module_name": data.String("_test_creator_module"),
 				"class_name":  data.String("TestClass2"),
 				"v1":          data.String("init_test"),
+				"v2":          data.String("init_test2"),
 			}
 			Convey("Then the state should be created with constructor arguments", func() {
 				state, err := ct.CreateState(ctx, params)
@@ -66,7 +67,30 @@ func TestCreateState(t *testing.T) {
 				})
 				v, err := Func(ctx, "creator_test2", "confirm")
 				So(err, ShouldBeNil)
-				So(v, ShouldEqual, `constructor init arg is "init_test"`)
+				So(v, ShouldEqual, `constructor init arg is v1=init_test, v2=init_test2`)
+			})
+		})
+
+		Convey("When the parameter has constructor arguments which lack optional value", func() {
+			params := data.Map{
+				"module_name": data.String("_test_creator_module"),
+				"class_name":  data.String("TestClass3"),
+				"a":           data.Int(55),
+			}
+			Convey("Then the state should be created and initialized with only required value", func() {
+				state, err := ct.CreateState(ctx, params)
+				So(err, ShouldBeNil)
+				Reset(func() {
+					state.Terminate(ctx)
+				})
+
+				ctx.SharedStates.Add("creator_test3", "creator_test3", state)
+				Reset(func() {
+					ctx.SharedStates.Remove("creator_test3")
+				})
+				v, err := Func(ctx, "creator_test3", "confirm")
+				So(err, ShouldBeNil)
+				So(v, ShouldEqual, "constructor init arg is a=55, b=b, c={}")
 			})
 		})
 

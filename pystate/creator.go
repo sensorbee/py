@@ -23,8 +23,8 @@ type Creator struct {
 // * class_name:   Python class name, required.
 // * write_method: [optional] Python method name when call write in.
 //
-// other rest parameters will set python constructor arguments, the arguments'
-// type is dictionary.
+// other rest parameters will set python constructor arguments, the arguments
+// are set for named arguments.
 func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
 	var err error
