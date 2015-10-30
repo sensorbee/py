@@ -6,6 +6,28 @@ import (
 	"testing"
 )
 
+func TestLoadModuleError(t *testing.T) {
+	Convey("Given a python interpreter set up default import path", t, func() {
+		ImportSysAndAppendPath("")
+
+		Convey("When get module with not exist module name", func() {
+			_, err := LoadModule("not_exist_module")
+			Convey("Then an error should be occurred", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "ImportError")
+			})
+		})
+
+		Convey("When get syntax error module", func() {
+			_, err := LoadModule("_test_syntax_error")
+			Convey("Then an error should be occurred", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "SyntaxError")
+			})
+		})
+	})
+}
+
 func TestNewInstanceAndStateness(t *testing.T) {
 	Convey("Given an initialized python module", t, func() {
 
@@ -19,6 +41,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 			_, err := mdl.NewInstance("NonexistentClass")
 			Convey("Then an error should be occurred", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "AttributeError")
 			})
 		})
 
@@ -115,6 +138,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 			_, err := mdl.NewInstance("PythonTest", params)
 			Convey("Then an error should be occurred", func() {
 				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "TypeError")
 			})
 		})
 
@@ -156,6 +180,14 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				actual, err := class.Call("get_class_value")
 				So(err, ShouldBeNil)
 				So(actual, ShouldEqual, "instance_value")
+			})
+		})
+
+		Convey("When get an invalid class instance by GetClass", func() {
+			_, err := mdl.GetClass("NonexistentClass")
+			Convey("Then an error should be occurred", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "AttributeError")
 			})
 		})
 	})

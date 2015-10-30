@@ -5,7 +5,6 @@ package p
 */
 import "C"
 import (
-	"errors"
 	"fmt"
 	"pfi/sensorbee/sensorbee/data"
 	"runtime"
@@ -29,7 +28,8 @@ func invokeDirect(pyObj *C.PyObject, name string, args ...data.Value) (Object, e
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				ch <- &Result{Object{}, fmt.Errorf("cannot call '%v' due to panic: %v", name, r)}
+				ch <- &Result{Object{}, fmt.Errorf(
+					"cannot call '%v' due to panic: %v", name, r)}
 			}
 		}()
 
@@ -40,32 +40,25 @@ func invokeDirect(pyObj *C.PyObject, name string, args ...data.Value) (Object, e
 		var res Object
 		pyFunc, err := getPyFunc(pyObj, name)
 		if err != nil {
-			ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
+			ch <- &Result{res, fmt.Errorf("fail to get '%v' function: %v", name,
+				err.Error())}
 			return
 		}
 		defer pyFunc.decRef()
 
-		pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
-		if pyArg == nil {
-			ch <- &Result{res, getPyErr()}
+		pyArg, err := convertArgsGo2Py(args)
+		if err != nil {
+			ch <- &Result{res, fmt.Errorf(
+				"fail to convert argument in calling '%v' function: %v",
+				name, err.Error())}
 			return
 		}
-		defer C.Py_DecRef(pyArg)
+		defer pyArg.decRef()
 
-		for i, v := range args {
-			o, err := newPyObj(v)
-			if err != nil {
-				ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
-				return
-			}
-			// PyTuple object takes over the value's reference, and not need to
-			// decrease reference counter.
-			C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
-		}
-
-		ret, err := pyFunc.callObject(Object{p: pyArg})
+		ret, err := pyFunc.callObject(pyArg)
 		if err != nil {
-			ch <- &Result{res, fmt.Errorf("%v in '%v'", err.Error(), name)}
+			ch <- &Result{res, fmt.Errorf("fail to call '%v' function: %v", name,
+				err.Error())}
 			return
 		}
 
@@ -86,7 +79,8 @@ func invoke(pyObj *C.PyObject, name string, args ...data.Value) (data.Value, err
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				ch <- &Result{data.Null{}, fmt.Errorf("cannot call '%v' due to panic: %v", name, r)}
+				ch <- &Result{data.Null{}, fmt.Errorf(
+					"cannot call '%v' due to panic: %v", name, r)}
 			}
 		}()
 
@@ -97,21 +91,25 @@ func invoke(pyObj *C.PyObject, name string, args ...data.Value) (data.Value, err
 		var res data.Value
 		pyFunc, err := getPyFunc(pyObj, name)
 		if err != nil {
-			ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
+			ch <- &Result{res, fmt.Errorf("fail to get '%v' function: %v", name,
+				err.Error())}
 			return
 		}
 		defer pyFunc.decRef()
 
 		pyArg, err := convertArgsGo2Py(args)
 		if err != nil {
-			ch <- &Result{res, fmt.Errorf("%v at '%v'", err.Error(), name)}
+			ch <- &Result{res, fmt.Errorf(
+				"fail to convert argument in calling '%v' function: %v",
+				name, err.Error())}
 			return
 		}
 		defer pyArg.decRef()
 
 		ret, err := pyFunc.callObject(pyArg)
 		if err != nil {
-			ch <- &Result{res, fmt.Errorf("%v in '%v'", err.Error(), name)}
+			ch <- &Result{res, fmt.Errorf("fail to call '%v' function: %v", name,
+				err.Error())}
 			return
 		}
 		defer ret.decRef()
@@ -131,11 +129,11 @@ func getPyFunc(pyObj *C.PyObject, name string) (ObjectFunc, error) {
 
 	pyFunc := C.PyObject_GetAttrString(pyObj, cFunc)
 	if pyFunc == nil {
-		return ObjectFunc{}, errors.New("cannot load function")
+		return ObjectFunc{}, getPyErr()
 	}
 
 	if ok := C.PyCallable_Check(pyFunc); ok == 0 {
-		return ObjectFunc{}, errors.New("cannot call function")
+		return ObjectFunc{}, fmt.Errorf("'%v' is not callable object", name)
 	}
 
 	return ObjectFunc{Object{p: pyFunc}}, nil

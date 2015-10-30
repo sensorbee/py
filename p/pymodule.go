@@ -32,10 +32,10 @@ func LoadModule(name string) (ObjectModule, error) {
 		state := GILState_Ensure()
 		defer GILState_Release(state)
 
-		pyMdl, err := C.PyImport_ImportModule(cModule)
+		pyMdl := C.PyImport_ImportModule(cModule)
 		if pyMdl == nil {
-			ch <- &Result{ObjectModule{}, fmt.Errorf("cannot load '%v' module: %v",
-				name, err)}
+			ch <- &Result{ObjectModule{}, fmt.Errorf(
+				"fail to load '%v' module: %v", name, getPyErr())}
 			return
 		}
 
@@ -118,8 +118,8 @@ func (m *ObjectModule) GetClass(name string) (ObjectInstance, error) {
 
 		pyInstance := C.PyObject_GetAttrString(m.p, cName)
 		if pyInstance == nil {
-			ch <- &Result{ObjectInstance{}, fmt.Errorf("cannot get '%v' instance",
-				name)}
+			ch <- &Result{ObjectInstance{}, fmt.Errorf(
+				"fail to get '%v' instance: %v", name, getPyErr())}
 			return
 		}
 		ch <- &Result{ObjectInstance{Object{p: pyInstance}}, nil}
