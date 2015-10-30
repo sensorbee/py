@@ -7,6 +7,47 @@ import (
 	"testing"
 )
 
+func TestGetPyFuncError(t *testing.T) {
+	Convey("Given an initialized pyfunc test module", t, func() {
+		ImportSysAndAppendPath("")
+
+		mdl, err := LoadModule("_test_pyfunc")
+		So(err, ShouldBeNil)
+		So(mdl, ShouldNotBeNil)
+		Reset(func() {
+			mdl.DecRef()
+		})
+
+		Convey("When func name is not exist", func() {
+			_, err := safePythonCall(func() (Object, error) {
+				o, err := getPyFunc(mdl.p, "not_exit_func")
+				if err != nil {
+					return Object{}, err
+				}
+				// this code is illegal, should not cast ObjectFunc to Object,
+				// but this function is only to confirm error
+				return Object{p: o.p}, nil
+			})
+			So(err, ShouldNotBeNil)
+			So(err.Error(), ShouldContainSubstring, "AttributeError")
+		})
+
+		Convey("When given name does not indicate function attribute", func() {
+			_, err := safePythonCall(func() (Object, error) {
+				o, err := getPyFunc(mdl.p, "not_func_attr")
+				if err != nil {
+					return Object{}, err
+				}
+				// this code is illegal, should not cast ObjectFunc to Object,
+				// but this function is only to confirm error
+				return Object{p: o.p}, nil
+			})
+			So(err, ShouldNotBeNil)
+			So(err.Error(), ShouldContainSubstring, "not callable")
+		})
+	})
+}
+
 func TestPyFunc(t *testing.T) {
 	Convey("Given an initialized pyfunc test module", t, func() {
 		ImportSysAndAppendPath("")
