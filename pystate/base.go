@@ -20,9 +20,23 @@ var ErrAlreadyTerminated = errors.New("pystate is already terminated")
 // BaseParams has parameters for Base given in WITH clause of CREATE STATE
 // statement.
 type BaseParams struct {
-	ModulePath      string `codec:"module_path"`
-	ModuleName      string `codec:"module_name"`
-	ClassName       string `codec:"class_name"`
+	// ModulePath is a path at where the target Python module is located.
+	// This parameter can be set as "module_path" in a WITH clause. This is
+	// a required parameter.
+	ModulePath string `codec:"module_path"`
+
+	// ModuleName is a name of a Python module to be loaded. This parameter
+	// can be set as "module_name" in a WITH clause. This is a required parameter.
+	ModuleName string `codec:"module_name"`
+
+	// ClassName is a name of a class in the Python module to be loaded. This
+	// parameter can be set as "class_name" in a WITH clause. This is a required
+	// parameter.
+	ClassName string `codec:"class_name"`
+
+	// WriteMethodName is a name of a method which handles Write calls, which
+	// is mostly done by 'uds' Sink. When this parameter is specified, a UDS
+	// will be writable. Otherwise, it doesn't support Write.
 	WriteMethodName string `codec:"write_method"`
 }
 

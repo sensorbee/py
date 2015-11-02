@@ -14,14 +14,8 @@ type Creator struct {
 var _ udf.UDSLoader = &Creator{}
 
 // CreateState creates `core.SharedState` of a UDS written in Python.
-//
-// * module_path:  Directory path of python module path, default is ''.
-// * module_name:  Python module name, required.
-// * class_name:   Python class name, required.
-// * write_method: [optional] Python method name to be called by 'uds' Sink.
-//
-// If params has parameters other than the predefined ones above, they will be
-// directly passed to 'create' static method of the Python UDS.
+// If params has parameters other than the ones defined in BaseParams, they
+// will be directly passed to 'create' static method of the Python UDS.
 func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
 	bp, err := ExtractBaseParams(params, true)
