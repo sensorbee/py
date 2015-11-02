@@ -18,17 +18,17 @@ func TestCreateState(t *testing.T) {
 				"class_name":  data.String("TestClass"),
 			}
 			Convey("Then the state should be created and set default value", func() {
-				state, err := ct.CreateState(ctx, params)
+				st, err := ct.CreateState(ctx, params)
 				So(err, ShouldBeNil)
 				Reset(func() {
-					state.Terminate(ctx)
+					st.Terminate(ctx)
 				})
-				ps, ok := state.(*State)
+				ps, ok := st.(*state)
 				So(ok, ShouldBeTrue)
-				So(ps.modulePath, ShouldEqual, "")
-				So(ps.moduleName, ShouldEqual, "_test_creator_module")
+				So(ps.base.params.ModulePath, ShouldEqual, "")
+				So(ps.base.params.ModuleName, ShouldEqual, "_test_creator_module")
 
-				ctx.SharedStates.Add("creator_test", "creator_test", state)
+				ctx.SharedStates.Add("creator_test", "creator_test", st)
 				Reset(func() {
 					ctx.SharedStates.Remove("creator_test")
 				})
@@ -106,9 +106,9 @@ func TestCreateState(t *testing.T) {
 				Reset(func() {
 					state.Terminate(ctx)
 				})
-				ps, ok := state.(*WritableState)
+				ps, ok := state.(*writableState)
 				So(ok, ShouldBeTrue)
-				So(ps.writeMethodName, ShouldEqual, "write")
+				So(ps.base.params.WriteMethodName, ShouldEqual, "write")
 
 				t := &core.Tuple{}
 				err = ps.Write(ctx, t)
