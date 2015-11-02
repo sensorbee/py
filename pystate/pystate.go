@@ -25,7 +25,7 @@ type PyState interface {
 	unlock()
 	rLock()
 	rUnlock()
-	call(name string, args ...data.Value) (data.Value, error)
+	Call(name string, args ...data.Value) (data.Value, error)
 }
 
 // State is a wrapper of a UDS written in Python. State is save/loadable,
@@ -163,8 +163,8 @@ func (s *WritableState) Write(ctx *core.Context, t *core.Tuple) error {
 	return err
 }
 
-// call calls an instance method and returns its value.
-func (s *State) call(funcName string, dt ...data.Value) (data.Value, error) {
+// Call calls an instance method and returns its value.
+func (s *State) Call(funcName string, dt ...data.Value) (data.Value, error) {
 	s.lock()
 	defer s.unlock()
 	if s.ins == nil {
@@ -174,15 +174,15 @@ func (s *State) call(funcName string, dt ...data.Value) (data.Value, error) {
 	return s.ins.Call(funcName, dt...)
 }
 
-// Func calls instance method and return value
-func Func(ctx *core.Context, stateName, funcName string, dt ...data.Value) (
+// CallMethod calls an instance method and returns its value.
+func CallMethod(ctx *core.Context, stateName, funcName string, dt ...data.Value) (
 	data.Value, error) {
 	s, err := lookupPyState(ctx, stateName)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.call(funcName, dt...)
+	return s.Call(funcName, dt...)
 }
 
 // Save saves the model of the state. It saves its internal state and also calls
