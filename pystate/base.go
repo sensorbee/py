@@ -17,15 +17,6 @@ import (
 // SharedState is terminated.
 var ErrAlreadyTerminated = errors.New("pystate is already terminated")
 
-// Base is a wrapper of a UDS written in Python. It has common implementations
-// that can be shared with State, WritableState, and other wrappers. Base
-// doesn't acquire lock and the caller should provide concurrency control
-// over them. Each method describes what kind of lock it requires.
-type Base struct {
-	params BaseParams
-	ins    *py.ObjectInstance
-}
-
 // BaseParams has parameters for Base given in WITH clause of CREATE STATE
 // statement.
 type BaseParams struct {
@@ -33,6 +24,69 @@ type BaseParams struct {
 	ModuleName      string `codec:"module_name"`
 	ClassName       string `codec:"class_name"`
 	WriteMethodName string `codec:"write_method"`
+}
+
+var (
+	modulePath      = data.MustCompilePath("module_path")
+	moduleNamePath  = data.MustCompilePath("module_name")
+	classNamePath   = data.MustCompilePath("class_name")
+	writeMethodPath = data.MustCompilePath("write_method")
+)
+
+// ExtractBaseParams extract parameters for Base from parameters given in
+// a WITH clause of a CREATE STATE statement. If removeBaseKeys is true,
+// this function removes base parameters from params and only other parameters
+// remain in the map when this function succeeds. If this function fails,
+// all parameters including base parameters remain in the map.
+func ExtractBaseParams(params data.Map, removeBaseKeys bool) (*BaseParams, error) {
+	bp := &BaseParams{}
+
+	if mp, err := params.Get(modulePath); err == nil {
+		if p, err := data.AsString(mp); err != nil {
+			return nil, err
+		} else {
+			bp.ModulePath = p
+		}
+	}
+
+	if mn, err := params.Get(moduleNamePath); err != nil {
+		return nil, err
+	} else if moduleName, err := data.AsString(mn); err != nil {
+		return nil, err
+	} else {
+		bp.ModuleName = moduleName
+	}
+
+	if cn, err := params.Get(classNamePath); err != nil {
+		return nil, err
+	} else if className, err := data.AsString(cn); err != nil {
+		return nil, err
+	} else {
+		bp.ClassName = className
+	}
+
+	if wmn, err := params.Get(writeMethodPath); err == nil {
+		bp.WriteMethodName, err = data.AsString(wmn)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if removeBaseKeys {
+		for _, k := range []string{"module_path", "module_name", "class_name", "write_method"} {
+			delete(params, k)
+		}
+	}
+	return bp, nil
+}
+
+// Base is a wrapper of a UDS written in Python. It has common implementations
+// that can be shared with State, WritableState, and other wrappers. Base
+// doesn't acquire lock and the caller should provide concurrency control
+// over them. Each method describes what kind of lock it requires.
+type Base struct {
+	params BaseParams
+	ins    *py.ObjectInstance
 }
 
 // NewBase creates a new Base state.

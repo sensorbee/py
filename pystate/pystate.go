@@ -17,14 +17,8 @@ type state struct {
 }
 
 // New creates `core.SharedState` for python constructor.
-func New(modulePathName, moduleName, className string, writeMethodName string,
-	params data.Map) (core.SharedState, error) {
-	bs, err := NewBase(&BaseParams{
-		ModulePath:      modulePathName,
-		ModuleName:      moduleName,
-		ClassName:       className,
-		WriteMethodName: writeMethodName,
-	}, params)
+func New(baseParams *BaseParams, params data.Map) (core.SharedState, error) {
+	bs, err := NewBase(baseParams, params)
 	if err != nil {
 		return nil, err
 	}

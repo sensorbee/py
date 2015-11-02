@@ -7,13 +7,6 @@ import (
 	"pfi/sensorbee/sensorbee/data"
 )
 
-var (
-	modulePath      = data.MustCompilePath("module_path")
-	moduleNamePath  = data.MustCompilePath("module_name")
-	classNamePath   = data.MustCompilePath("class_name")
-	writeMethodPath = data.MustCompilePath("write_method")
-)
-
 // Creator is used by BQL to create state as a UDS.
 type Creator struct {
 }
@@ -31,43 +24,11 @@ var _ udf.UDSLoader = &Creator{}
 // directly passed to 'create' static method of the Python UDS.
 func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
-	var err error
-	mdlPathName := ""
-	if mp, err := params.Get(modulePath); err == nil {
-		if mdlPathName, err = data.AsString(mp); err != nil {
-			return nil, err
-		}
-		delete(params, "module_path")
-	}
-	mn, err := params.Get(moduleNamePath)
+	bp, err := ExtractBaseParams(params, true)
 	if err != nil {
 		return nil, err
 	}
-	delete(params, "module_name")
-	moduleName, err := data.AsString(mn)
-	if err != nil {
-		return nil, err
-	}
-
-	cn, err := params.Get(classNamePath)
-	if err != nil {
-		return nil, err
-	}
-	delete(params, "class_name")
-	className, err := data.AsString(cn)
-	if err != nil {
-		return nil, err
-	}
-
-	writeMethodName := ""
-	if wmn, err := params.Get(writeMethodPath); err == nil {
-		if writeMethodName, err = data.AsString(wmn); err != nil {
-			return nil, err
-		}
-		delete(params, "write_method")
-	}
-
-	return New(mdlPathName, moduleName, className, writeMethodName, params)
+	return New(bp, params)
 }
 
 // LoadState loads saved state and creates a new instance from it.

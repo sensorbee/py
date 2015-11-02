@@ -10,16 +10,12 @@ import (
 )
 
 type defaultCreator struct {
-	modulePath      string
-	moduleName      string
-	className       string
-	writeMethodName string
+	baseParams *BaseParams
 }
 
 func (c *defaultCreator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
-	return New(c.modulePath, c.moduleName, c.className, c.writeMethodName,
-		params)
+	return New(c.baseParams, params)
 }
 
 // MustRegisterPyUDSCreator is like MustRegisterGlobalUDSCreator for Python
@@ -27,10 +23,12 @@ func (c *defaultCreator) CreateState(ctx *core.Context, params data.Map) (
 func MustRegisterPyUDSCreator(typeName string, modulePath string,
 	moduleName string, className string, writeMethodName string) {
 	udf.MustRegisterGlobalUDSCreator(typeName, &defaultCreator{
-		modulePath:      modulePath,
-		moduleName:      moduleName,
-		className:       className,
-		writeMethodName: writeMethodName,
+		baseParams: &BaseParams{
+			ModulePath:      modulePath,
+			ModuleName:      moduleName,
+			ClassName:       className,
+			WriteMethodName: writeMethodName,
+		},
 	})
 }
 
