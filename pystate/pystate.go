@@ -37,11 +37,6 @@ type State struct {
 	rwm sync.RWMutex
 }
 
-// WritableState is essentially same as State except its Write method support.
-type WritableState struct {
-	State
-}
-
 type pyStateMsgpack struct {
 	ModulePath      string `codec:"module_path"`
 	ModuleName      string `codec:"module_name"`
@@ -131,20 +126,6 @@ func (s *State) Terminate(ctx *core.Context) error {
 	return nil
 }
 
-// Write calls "write" function of the Python UDS.
-func (s *WritableState) Write(ctx *core.Context, t *core.Tuple) error {
-	// Although this write may modify the state of the Python UDS, it doesn't
-	// change this State Go instance itself. Therefore, RLock is fine here.
-	s.rwm.RLock()
-	defer s.rwm.RUnlock()
-	if s.ins == nil {
-		return ErrAlreadyTerminated
-	}
-
-	_, err := s.ins.Call(s.writeMethodName, t.Data)
-	return err
-}
-
 // Call calls an instance method and returns its value.
 func (s *State) Call(funcName string, dt ...data.Value) (data.Value, error) {
 	// Although this call may modify the state of the Python UDS, it doesn't
@@ -156,17 +137,6 @@ func (s *State) Call(funcName string, dt ...data.Value) (data.Value, error) {
 	}
 
 	return s.ins.Call(funcName, dt...)
-}
-
-// CallMethod calls an instance method and returns its value.
-func CallMethod(ctx *core.Context, stateName, funcName string, dt ...data.Value) (
-	data.Value, error) {
-	s, err := lookupPyState(ctx, stateName)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.Call(funcName, dt...)
 }
 
 // Save saves the model of the state. It saves its internal state and also calls
@@ -364,6 +334,36 @@ func (s *State) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
 	s.set(ins, saved.ModulePath, saved.ModuleName, saved.ClassName,
 		saved.WriteMethodName)
 	return nil
+}
+
+// WritableState is essentially same as State except its Write method support.
+type WritableState struct {
+	State
+}
+
+// Write calls "write" function of the Python UDS.
+func (s *WritableState) Write(ctx *core.Context, t *core.Tuple) error {
+	// Although this write may modify the state of the Python UDS, it doesn't
+	// change this State Go instance itself. Therefore, RLock is fine here.
+	s.rwm.RLock()
+	defer s.rwm.RUnlock()
+	if s.ins == nil {
+		return ErrAlreadyTerminated
+	}
+
+	_, err := s.ins.Call(s.writeMethodName, t.Data)
+	return err
+}
+
+// CallMethod calls an instance method and returns its value.
+func CallMethod(ctx *core.Context, stateName, funcName string, dt ...data.Value) (
+	data.Value, error) {
+	s, err := lookupPyState(ctx, stateName)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Call(funcName, dt...)
 }
 
 func lookupPyState(ctx *core.Context, stateName string) (PyState, error) {
