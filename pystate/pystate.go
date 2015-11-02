@@ -18,12 +18,6 @@ import (
 // SharedState is terminated.
 var ErrAlreadyTerminated = errors.New("PyState is already terminated")
 
-// PyState is a `SharedState` for python instance.
-type PyState interface {
-	core.SharedState
-	Call(name string, args ...data.Value) (data.Value, error)
-}
-
 // State is a wrapper of a UDS written in Python. State is save/loadable,
 // but doesn't support Write.
 type State struct {
@@ -46,7 +40,7 @@ type pyStateMsgpack struct {
 
 // New creates `core.SharedState` for python constructor.
 func New(modulePathName, moduleName, className string, writeMethodName string,
-	params data.Map) (PyState, error) {
+	params data.Map) (core.SharedState, error) {
 
 	var ins py.ObjectInstance
 	var err error
@@ -366,15 +360,20 @@ func CallMethod(ctx *core.Context, stateName, funcName string, dt ...data.Value)
 	return s.Call(funcName, dt...)
 }
 
-func lookupPyState(ctx *core.Context, stateName string) (PyState, error) {
+type pyState interface {
+	core.SharedState
+	Call(funcName string, dt ...data.Value) (data.Value, error)
+}
+
+func lookupPyState(ctx *core.Context, stateName string) (pyState, error) {
 	st, err := ctx.SharedStates.Get(stateName)
 	if err != nil {
 		return nil, err
 	}
 
-	if s, ok := st.(PyState); ok {
+	if s, ok := st.(pyState); ok {
 		return s, nil
 	}
 
-	return nil, fmt.Errorf("state '%v' isn't a PyState", stateName)
+	return nil, fmt.Errorf("state '%v' isn't a pystate.State or pystate.WritableState", stateName)
 }
