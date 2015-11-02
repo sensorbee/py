@@ -21,10 +21,6 @@ var ErrAlreadyTerminated = errors.New("PyState is already terminated")
 // PyState is a `SharedState` for python instance.
 type PyState interface {
 	core.SharedState
-	lock()
-	unlock()
-	rLock()
-	rUnlock()
 	Call(name string, args ...data.Value) (data.Value, error)
 }
 
@@ -51,22 +47,6 @@ type pyStateMsgpack struct {
 	ModuleName      string `codec:"module_name"`
 	ClassName       string `codec:"class_name"`
 	WriteMethodName string `codec:"write_method"`
-}
-
-func (s *State) lock() {
-	s.rwm.Lock()
-}
-
-func (s *State) unlock() {
-	s.rwm.Unlock()
-}
-
-func (s *State) rLock() {
-	s.rwm.RLock()
-}
-
-func (s *State) rUnlock() {
-	s.rwm.RUnlock()
 }
 
 // New creates `core.SharedState` for python constructor.
@@ -153,8 +133,10 @@ func (s *State) Terminate(ctx *core.Context) error {
 
 // Write calls "write" function of the Python UDS.
 func (s *WritableState) Write(ctx *core.Context, t *core.Tuple) error {
-	s.lock()
-	defer s.unlock()
+	// Although this write may modify the state of the Python UDS, it doesn't
+	// change this State Go instance itself. Therefore, RLock is fine here.
+	s.rwm.RLock()
+	defer s.rwm.RUnlock()
 	if s.ins == nil {
 		return ErrAlreadyTerminated
 	}
@@ -165,8 +147,10 @@ func (s *WritableState) Write(ctx *core.Context, t *core.Tuple) error {
 
 // Call calls an instance method and returns its value.
 func (s *State) Call(funcName string, dt ...data.Value) (data.Value, error) {
-	s.lock()
-	defer s.unlock()
+	// Although this call may modify the state of the Python UDS, it doesn't
+	// change this State Go instance itself. Therefore, RLock is fine here.
+	s.rwm.RLock()
+	defer s.rwm.RUnlock()
 	if s.ins == nil {
 		return nil, ErrAlreadyTerminated
 	}
@@ -190,8 +174,8 @@ func CallMethod(ctx *core.Context, stateName, funcName string, dt ...data.Value)
 // necessary to reconstruct the current state including parameters passed by
 // CREATE STATE statement.
 func (s *State) Save(ctx *core.Context, w io.Writer, params data.Map) error {
-	s.rLock()
-	defer s.rUnlock()
+	s.rwm.RLock()
+	defer s.rwm.RUnlock()
 	if s.ins == nil {
 		return ErrAlreadyTerminated
 	}
@@ -285,8 +269,8 @@ func (s *State) savePyMsgpack(w io.Writer) error {
 // calls 'load' static method of the Python UDS. 'load' static method creates
 // a new instance of the Python UDS.
 func (s *State) Load(ctx *core.Context, r io.Reader, params data.Map) error {
-	s.lock()
-	defer s.unlock()
+	s.rwm.Lock()
+	defer s.rwm.Unlock()
 	if s.ins == nil {
 		return ErrAlreadyTerminated
 	}
