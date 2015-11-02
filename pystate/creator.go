@@ -1,6 +1,8 @@
 package pystate
 
 import (
+	"io"
+	"pfi/sensorbee/sensorbee/bql/udf"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
 )
@@ -15,6 +17,8 @@ var (
 // Creator is used by BQL to create state as a UDS.
 type Creator struct {
 }
+
+var _ udf.UDSLoader = &Creator{}
 
 // CreateState creates `core.SharedState`
 //
@@ -55,13 +59,29 @@ func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 		return nil, err
 	}
 
-	writeFuncName := ""
+	writeMethodName := ""
 	if wmn, err := params.Get(writeMethodPath); err == nil {
-		if writeFuncName, err = data.AsString(wmn); err != nil {
+		if writeMethodName, err = data.AsString(wmn); err != nil {
 			return nil, err
 		}
 		delete(params, "write_method")
 	}
 
-	return New(mdlPathName, moduleName, className, writeFuncName, params)
+	return New(mdlPathName, moduleName, className, writeMethodName, params)
+}
+
+// LoadState loads saved state.
+func (c *Creator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
+	core.SharedState, error) {
+	s := pyState{}
+	if err := s.Load(ctx, r, params); err != nil {
+		return nil, err
+	}
+
+	if s.writeMethodName != "" {
+		return &pyWritableState{
+			s,
+		}, nil
+	}
+	return &s, nil
 }

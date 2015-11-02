@@ -1,15 +1,22 @@
 class TestClass(object):
-    def __init__(self):
-        pass
+
+    @staticmethod
+    def create():
+        self = TestClass()
+        return self
 
     def write(self, value):
         return 'called! arg is "{}"'.format(str(value))
 
 
 class TestClass2(object):
-    def __init__(self, **params):
+
+    @staticmethod
+    def create(params):  # should be **params
+        self = TestClass2()
         self.v1 = params['v1']
         self.v2 = params['v2']
+        return self
 
     def confirm(self):
         return 'constructor init arg is v1={}, v2={}'.format(
@@ -17,10 +24,14 @@ class TestClass2(object):
 
 
 class TestClass3(object):
-    def __init__(self, a, b='b', **c):
+
+    @staticmethod
+    def create(a, b='b', **c):
+        self = TestClass3()
         self.a = a
         self.b = b
         self.c = c
+        return self
 
     def confirm(self):
         return 'constructor init arg is a={}, b={}, c={}'.format(
