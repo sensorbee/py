@@ -28,7 +28,9 @@ type PyState interface {
 	call(name string, args ...data.Value) (data.Value, error)
 }
 
-type pyState struct {
+// State is a wrapper of a UDS written in Python. State is save/loadable,
+// but doesn't support Write.
+type State struct {
 	modulePath      string
 	moduleName      string
 	className       string
@@ -39,8 +41,9 @@ type pyState struct {
 	rwm sync.RWMutex
 }
 
-type pyWritableState struct {
-	pyState
+// WritableState is essentially same as State except its Write method support.
+type WritableState struct {
+	State
 }
 
 type pyStateMsgpack struct {
@@ -50,19 +53,19 @@ type pyStateMsgpack struct {
 	WriteMethodName string `codec:"write_method"`
 }
 
-func (s *pyState) lock() {
+func (s *State) lock() {
 	s.rwm.Lock()
 }
 
-func (s *pyState) unlock() {
+func (s *State) unlock() {
 	s.rwm.Unlock()
 }
 
-func (s *pyState) rLock() {
+func (s *State) rLock() {
 	s.rwm.RLock()
 }
 
-func (s *pyState) rUnlock() {
+func (s *State) rUnlock() {
 	s.rwm.RUnlock()
 }
 
@@ -82,11 +85,13 @@ func New(modulePathName, moduleName, className string, writeMethodName string,
 		return nil, err
 	}
 
-	state := pyState{}
+	state := State{}
 	state.set(ins, modulePathName, moduleName, className, writeMethodName)
 	// check if we have a writable state
 	if writeMethodName != "" {
-		return &pyWritableState{
+		return &WritableState{
+			// Although this copies a RWMutex, the mutex isn't being locked at
+			// the moment and it's safe to copy it now.
 			state,
 		}, nil
 	}
@@ -121,7 +126,7 @@ func newPyInstance(createMethodName, modulePathName, moduleName, className strin
 	return py.ObjectInstance{ins}, err
 }
 
-func (s *pyState) set(ins py.ObjectInstance, modulePathName, moduleName,
+func (s *State) set(ins py.ObjectInstance, modulePathName, moduleName,
 	className, writeMethodName string) {
 	if s.ins != nil {
 		s.ins.DecRef()
@@ -134,8 +139,8 @@ func (s *pyState) set(ins py.ObjectInstance, modulePathName, moduleName,
 	s.ins = &ins
 }
 
-// Terminate this state.
-func (s *pyState) Terminate(ctx *core.Context) error {
+// Terminate terminates the state.
+func (s *State) Terminate(ctx *core.Context) error {
 	s.rwm.Lock()
 	defer s.rwm.Unlock()
 	if s.ins == nil {
@@ -146,9 +151,8 @@ func (s *pyState) Terminate(ctx *core.Context) error {
 	return nil
 }
 
-// Write calls "write" function.
-// TODO should discuss this feature, bucket will be support?
-func (s *pyWritableState) Write(ctx *core.Context, t *core.Tuple) error {
+// Write calls "write" function of the Python UDS.
+func (s *WritableState) Write(ctx *core.Context, t *core.Tuple) error {
 	s.lock()
 	defer s.unlock()
 	if s.ins == nil {
@@ -159,8 +163,8 @@ func (s *pyWritableState) Write(ctx *core.Context, t *core.Tuple) error {
 	return err
 }
 
-// Func calls instance method and return value.
-func (s *pyState) call(funcName string, dt ...data.Value) (data.Value, error) {
+// call calls an instance method and returns its value.
+func (s *State) call(funcName string, dt ...data.Value) (data.Value, error) {
 	s.lock()
 	defer s.unlock()
 	if s.ins == nil {
@@ -181,9 +185,11 @@ func Func(ctx *core.Context, stateName, funcName string, dt ...data.Value) (
 	return s.call(funcName, dt...)
 }
 
-// Save saves the model of the state. pystate calls `save` method and
-// use its return value as dumped model.
-func (s *pyState) Save(ctx *core.Context, w io.Writer, params data.Map) error {
+// Save saves the model of the state. It saves its internal state and also calls
+// 'save' method of the Python UDS. The Python UDS must save all the information
+// necessary to reconstruct the current state including parameters passed by
+// CREATE STATE statement.
+func (s *State) Save(ctx *core.Context, w io.Writer, params data.Map) error {
 	s.rLock()
 	defer s.rUnlock()
 	if s.ins == nil {
@@ -235,7 +241,7 @@ const (
 	pyMLStateFormatVersion uint8 = 1
 )
 
-func (s *pyState) savePyMsgpack(w io.Writer) error {
+func (s *State) savePyMsgpack(w io.Writer) error {
 	if _, err := w.Write([]byte{pyMLStateFormatVersion}); err != nil {
 		return err
 	}
@@ -275,9 +281,10 @@ func (s *pyState) savePyMsgpack(w io.Writer) error {
 	return nil
 }
 
-// Load loads the model of the state. pystate calls `load` method and
-// pass to the model data by using method parameter.
-func (s *pyState) Load(ctx *core.Context, r io.Reader, params data.Map) error {
+// Load loads the model of the state. It reads the header of the saved file and
+// calls 'load' static method of the Python UDS. 'load' static method creates
+// a new instance of the Python UDS.
+func (s *State) Load(ctx *core.Context, r io.Reader, params data.Map) error {
 	s.lock()
 	defer s.unlock()
 	if s.ins == nil {
@@ -300,7 +307,7 @@ func (s *pyState) Load(ctx *core.Context, r io.Reader, params data.Map) error {
 	}
 }
 
-func (s *pyState) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
+func (s *State) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
 	params data.Map) error {
 	var dataSize uint32
 	if err := binary.Read(r, binary.LittleEndian, &dataSize); err != nil {
