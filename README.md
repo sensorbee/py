@@ -128,11 +128,11 @@ User can add original type name pystate. In an application, write like:
 
 ```go
 import (
-    "pfi/sensorbee/py"
+    "pfi/sensorbee/py/pystate"
 )
 
 func init() {
-    py.MustRegisterPyUDSCreator("my_uds", "lib", "sample_module",
+    pystate.MustRegisterPyUDSCreator("my_uds", "lib", "sample_module",
         "SampleClass", "write_method")
 }
 ```
@@ -172,11 +172,11 @@ In an application, write like:
 
 ```go
 import (
-    "pfi/sensorbee/py"
+    "pfi/sensorbee/py/pystate"
 )
 
 func init() {
-    py.MustRegisterPyUDF("my_udf", "lib", "sample_module",
+    pystate.MustRegisterPyUDF("my_udf", "lib", "sample_module",
         "sample_module_method")
 }
 ```
