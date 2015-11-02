@@ -59,15 +59,15 @@ func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 		return nil, err
 	}
 
-	writeFuncName := ""
+	writeMethodName := ""
 	if wmn, err := params.Get(writeMethodPath); err == nil {
-		if writeFuncName, err = data.AsString(wmn); err != nil {
+		if writeMethodName, err = data.AsString(wmn); err != nil {
 			return nil, err
 		}
 		delete(params, "write_method")
 	}
 
-	return New(mdlPathName, moduleName, className, writeFuncName, params)
+	return New(mdlPathName, moduleName, className, writeMethodName, params)
 }
 
 // LoadState loads saved state.
@@ -78,7 +78,7 @@ func (c *Creator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
 		return nil, err
 	}
 
-	if s.writeFuncName != "" {
+	if s.writeMethodName != "" {
 		return &pyWritableState{
 			s,
 		}, nil

@@ -108,7 +108,7 @@ func TestCreateState(t *testing.T) {
 				})
 				ps, ok := state.(*pyWritableState)
 				So(ok, ShouldBeTrue)
-				So(ps.writeFuncName, ShouldEqual, "write")
+				So(ps.writeMethodName, ShouldEqual, "write")
 
 				t := &core.Tuple{}
 				err = ps.Write(ctx, t)

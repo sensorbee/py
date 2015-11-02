@@ -32,10 +32,10 @@ type PyState interface {
 }
 
 type pyState struct {
-	modulePath    string
-	moduleName    string
-	className     string
-	writeFuncName string
+	modulePath      string
+	moduleName      string
+	className       string
+	writeMethodName string
 
 	ins *py.ObjectInstance
 
@@ -70,7 +70,7 @@ func (s *pyState) rUnlock() {
 }
 
 // New creates `core.SharedState` for python constructor.
-func New(modulePathName, moduleName, className string, writeFuncName string,
+func New(modulePathName, moduleName, className string, writeMethodName string,
 	params data.Map) (PyState, error) {
 
 	var ins py.ObjectInstance
@@ -86,9 +86,9 @@ func New(modulePathName, moduleName, className string, writeFuncName string,
 	}
 
 	state := pyState{}
-	state.set(ins, modulePathName, moduleName, className, writeFuncName)
+	state.set(ins, modulePathName, moduleName, className, writeMethodName)
 	// check if we have a writable state
-	if writeFuncName != "" {
+	if writeMethodName != "" {
 		return &pyWritableState{
 			state,
 		}, nil
@@ -125,7 +125,7 @@ func newPyInstance(createMethodName, modulePathName, moduleName, className strin
 }
 
 func (s *pyState) set(ins py.ObjectInstance, modulePathName, moduleName,
-	className, writeFuncName string) {
+	className, writeMethodName string) {
 	if s.ins != nil {
 		s.ins.DecRef()
 	}
@@ -133,7 +133,7 @@ func (s *pyState) set(ins py.ObjectInstance, modulePathName, moduleName,
 	s.modulePath = modulePathName
 	s.moduleName = moduleName
 	s.className = className
-	s.writeFuncName = writeFuncName
+	s.writeMethodName = writeMethodName
 	s.ins = &ins
 }
 
@@ -158,7 +158,7 @@ func (s *pyWritableState) Write(ctx *core.Context, t *core.Tuple) error {
 		return ErrAlreadyTerminated
 	}
 
-	_, err := s.ins.Call(s.writeFuncName, t.Data)
+	_, err := s.ins.Call(s.writeMethodName, t.Data)
 	return err
 }
 
@@ -248,7 +248,7 @@ func (s *pyState) savePyMsgpack(w io.Writer) error {
 		ModulePath:      s.modulePath,
 		ModuleName:      s.moduleName,
 		ClassName:       s.className,
-		WriteMethodName: s.writeFuncName,
+		WriteMethodName: s.writeMethodName,
 	}
 
 	msgpackHandle := &codec.MsgpackHandle{}
