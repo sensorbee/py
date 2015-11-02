@@ -14,8 +14,11 @@ import (
 	"sync"
 )
 
+// ErrAlreadyTerminated is occurred when called some python method after the
+// SharedState is terminated.
 var ErrAlreadyTerminated = errors.New("PyState is already terminated")
 
+// PyState is a `SharedState` for python instance.
 type PyState interface {
 	core.SharedState
 	lock()
@@ -60,10 +63,6 @@ func (s *pyState) rLock() {
 
 func (s *pyState) rUnlock() {
 	s.rwm.RUnlock()
-}
-
-func (s *pyState) call(name string, args ...data.Value) (data.Value, error) {
-	return s.ins.Call(name, args...)
 }
 
 // New creates `core.SharedState` for python constructor.
@@ -160,14 +159,23 @@ func (s *pyWritableState) Write(ctx *core.Context, t *core.Tuple) error {
 }
 
 // Func calls instance method and return value.
-func Func(ctx *core.Context, stateName string, funcName string, dt ...data.Value) (
+func (s *pyState) call(funcName string, dt ...data.Value) (data.Value, error) {
+	s.lock()
+	defer s.unlock()
+	if s.ins == nil {
+		return nil, ErrAlreadyTerminated
+	}
+
+	return s.ins.Call(funcName, dt...)
+}
+
+// Func calls instance method and return value
+func Func(ctx *core.Context, stateName, funcName string, dt ...data.Value) (
 	data.Value, error) {
 	s, err := lookupPyState(ctx, stateName)
 	if err != nil {
 		return nil, err
 	}
-	s.lock()
-	defer s.unlock()
 
 	return s.call(funcName, dt...)
 }
@@ -181,7 +189,7 @@ func (s *pyState) Save(ctx *core.Context, w io.Writer, params data.Map) error {
 		return ErrAlreadyTerminated
 	}
 
-	if err := s.savePyMLMsgpack(w); err != nil {
+	if err := s.savePyMsgpack(w); err != nil {
 		return err
 	}
 
@@ -226,7 +234,7 @@ const (
 	pyMLStateFormatVersion uint8 = 1
 )
 
-func (s *pyState) savePyMLMsgpack(w io.Writer) error {
+func (s *pyState) savePyMsgpack(w io.Writer) error {
 	if _, err := w.Write([]byte{pyMLStateFormatVersion}); err != nil {
 		return err
 	}
