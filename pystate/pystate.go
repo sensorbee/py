@@ -32,9 +32,10 @@ type PyState interface {
 }
 
 type pyState struct {
-	modulePath string
-	moduleName string
-	className  string
+	modulePath    string
+	moduleName    string
+	className     string
+	writeFuncName string
 
 	ins *py.ObjectInstance
 
@@ -43,13 +44,13 @@ type pyState struct {
 
 type pyWritableState struct {
 	pyState
-	writeFuncName string
 }
 
 type pyStateMsgpack struct {
-	ModulePath string `codec:"module_path"`
-	ModuleName string `codec:"module_name"`
-	ClassName  string `codec:"class_name"`
+	ModulePath      string `codec:"module_path"`
+	ModuleName      string `codec:"module_name"`
+	ClassName       string `codec:"class_name"`
+	WriteMethodName string `codec:"write_method"`
 }
 
 func (s *pyState) lock() {
@@ -85,12 +86,11 @@ func New(modulePathName, moduleName, className string, writeFuncName string,
 	}
 
 	state := pyState{}
-	state.set(ins, modulePathName, moduleName, className)
+	state.set(ins, modulePathName, moduleName, className, writeFuncName)
 	// check if we have a writable state
 	if writeFuncName != "" {
 		return &pyWritableState{
 			state,
-			writeFuncName,
 		}, nil
 	}
 	return &state, nil
@@ -125,7 +125,7 @@ func newPyInstance(createMethodName, modulePathName, moduleName, className strin
 }
 
 func (s *pyState) set(ins py.ObjectInstance, modulePathName, moduleName,
-	className string) {
+	className, writeFuncName string) {
 	if s.ins != nil {
 		s.ins.DecRef()
 	}
@@ -133,6 +133,7 @@ func (s *pyState) set(ins py.ObjectInstance, modulePathName, moduleName,
 	s.modulePath = modulePathName
 	s.moduleName = moduleName
 	s.className = className
+	s.writeFuncName = writeFuncName
 	s.ins = &ins
 }
 
@@ -244,9 +245,10 @@ func (s *pyState) savePyMsgpack(w io.Writer) error {
 
 	// Save parameter of PyMLState before save python's model
 	save := &pyStateMsgpack{
-		ModulePath: s.modulePath,
-		ModuleName: s.moduleName,
-		ClassName:  s.className,
+		ModulePath:      s.modulePath,
+		ModuleName:      s.moduleName,
+		ClassName:       s.className,
+		WriteMethodName: s.writeFuncName,
 	}
 
 	msgpackHandle := &codec.MsgpackHandle{}
@@ -371,7 +373,8 @@ func (s *pyState) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
 	// required to reduce memory consumption. It should be configurable.
 
 	// Exchange instance in `s` when Load succeeded
-	s.set(ins, saved.ModulePath, saved.ModuleName, saved.ClassName)
+	s.set(ins, saved.ModulePath, saved.ModuleName, saved.ClassName,
+		saved.WriteMethodName)
 	return nil
 }
 

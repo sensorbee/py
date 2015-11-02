@@ -73,9 +73,15 @@ func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 // LoadState loads saved state.
 func (c *Creator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
 	core.SharedState, error) {
-	var ss PyState
-	if err := ss.Load(ctx, r, params); err != nil {
+	s := pyState{}
+	if err := s.Load(ctx, r, params); err != nil {
 		return nil, err
 	}
-	return ss, nil
+
+	if s.writeFuncName != "" {
+		return &pyWritableState{
+			s,
+		}, nil
+	}
+	return &s, nil
 }
