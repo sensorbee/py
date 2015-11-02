@@ -2,7 +2,7 @@ package pystate
 
 import (
 	"fmt"
-	py "pfi/sensorbee/py/p"
+	"pfi/sensorbee/py"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
 	"sync"

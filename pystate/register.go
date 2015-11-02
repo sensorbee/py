@@ -1,9 +1,8 @@
-package py
+package pystate
 
 import (
 	"fmt"
-	py "pfi/sensorbee/py/p"
-	"pfi/sensorbee/py/pystate"
+	"pfi/sensorbee/py"
 	"pfi/sensorbee/sensorbee/bql/udf"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
@@ -19,12 +18,12 @@ type defaultCreator struct {
 
 func (c *defaultCreator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
-	return pystate.New(c.modulePath, c.moduleName, c.className, c.writeMethodName,
+	return New(c.modulePath, c.moduleName, c.className, c.writeMethodName,
 		params)
 }
 
 // MustRegisterPyUDSCreator is like MustRegisterGlobalUDSCreator for Python
-// instance.
+// instance, just an alias of pystate.
 func MustRegisterPyUDSCreator(typeName string, modulePath string,
 	moduleName string, className string, writeMethodName string) {
 	udf.MustRegisterGlobalUDSCreator(typeName, &defaultCreator{
@@ -49,6 +48,7 @@ func (f *defaultFunc) Func(ctx *core.Context, args ...data.Value) (data.Value,
 	return f.mdl.Call(f.funcName, args...)
 }
 
+// MustRegisterPyUDF is like MustRegisterGlobalUDF for Python module method.
 func MustRegisterPyUDF(udfName string, modulePath string, moduleName string,
 	funcName string) {
 	py.ImportSysAndAppendPath(modulePath)
