@@ -1,6 +1,8 @@
 package pystate
 
 import (
+	"io"
+	"pfi/sensorbee/sensorbee/bql/udf"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
 )
@@ -15,6 +17,8 @@ var (
 // Creator is used by BQL to create state as a UDS.
 type Creator struct {
 }
+
+var _ udf.UDSLoader = &Creator{}
 
 // CreateState creates `core.SharedState`
 //
@@ -64,4 +68,14 @@ func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 	}
 
 	return New(mdlPathName, moduleName, className, writeFuncName, params)
+}
+
+// LoadState loads saved state.
+func (c *Creator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
+	core.SharedState, error) {
+	var ss PyState
+	if err := ss.Load(ctx, r, params); err != nil {
+		return nil, err
+	}
+	return ss, nil
 }

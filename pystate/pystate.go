@@ -26,6 +26,9 @@ type PyState interface {
 	rLock()
 	rUnlock()
 	call(name string, args ...data.Value) (data.Value, error)
+
+	Save(ctx *core.Context, w io.Writer, params data.Map) error
+	Load(ctx *core.Context, r io.Reader, params data.Map) error
 }
 
 type pyState struct {
