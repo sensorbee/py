@@ -20,15 +20,15 @@ type Creator struct {
 
 var _ udf.UDSLoader = &Creator{}
 
-// CreateState creates `core.SharedState`
+// CreateState creates `core.SharedState` of a UDS written in Python.
 //
 // * module_path:  Directory path of python module path, default is ''.
 // * module_name:  Python module name, required.
 // * class_name:   Python class name, required.
-// * write_method: [optional] Python method name when call write in.
+// * write_method: [optional] Python method name to be called by 'uds' Sink.
 //
-// other rest parameters will set python constructor arguments, the arguments
-// are set for named arguments.
+// If params has parameters other than the predefined ones above, they will be
+// directly passed to 'create' static method of the Python UDS.
 func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
 	var err error
@@ -70,16 +70,18 @@ func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 	return New(mdlPathName, moduleName, className, writeMethodName, params)
 }
 
-// LoadState loads saved state.
+// LoadState loads saved state and creates a new instance from it.
 func (c *Creator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
 	core.SharedState, error) {
-	s := pyState{}
+	s := State{}
 	if err := s.Load(ctx, r, params); err != nil {
 		return nil, err
 	}
 
 	if s.writeMethodName != "" {
-		return &pyWritableState{
+		return &WritableState{
+			// Although this copies a RWMutex, the mutex isn't being locked at
+			// the moment and it's safe to copy it now.
 			s,
 		}, nil
 	}

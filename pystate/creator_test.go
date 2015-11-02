@@ -23,7 +23,7 @@ func TestCreateState(t *testing.T) {
 				Reset(func() {
 					state.Terminate(ctx)
 				})
-				ps, ok := state.(*pyState)
+				ps, ok := state.(*State)
 				So(ok, ShouldBeTrue)
 				So(ps.modulePath, ShouldEqual, "")
 				So(ps.moduleName, ShouldEqual, "_test_creator_module")
@@ -35,12 +35,12 @@ func TestCreateState(t *testing.T) {
 				Convey("When prepare to be called one instance method", func() {
 					Convey("Then exist instance method should be called", func() {
 						dt := data.String("test")
-						v, err := Func(ctx, "creator_test", "write", dt)
+						v, err := CallMethod(ctx, "creator_test", "write", dt)
 						So(err, ShouldBeNil)
 						So(v, ShouldEqual, `called! arg is "test"`)
 					})
 					Convey("Then not exist instance method should not be called and return error", func() {
-						_, err = Func(ctx, "creator_test", "not_exist_method")
+						_, err = CallMethod(ctx, "creator_test", "not_exist_method")
 						So(err, ShouldNotBeNil)
 					})
 				})
@@ -65,7 +65,7 @@ func TestCreateState(t *testing.T) {
 				Reset(func() {
 					ctx.SharedStates.Remove("creator_test2")
 				})
-				v, err := Func(ctx, "creator_test2", "confirm")
+				v, err := CallMethod(ctx, "creator_test2", "confirm")
 				So(err, ShouldBeNil)
 				So(v, ShouldEqual, `constructor init arg is v1=init_test, v2=init_test2`)
 			})
@@ -88,7 +88,7 @@ func TestCreateState(t *testing.T) {
 				Reset(func() {
 					ctx.SharedStates.Remove("creator_test3")
 				})
-				v, err := Func(ctx, "creator_test3", "confirm")
+				v, err := CallMethod(ctx, "creator_test3", "confirm")
 				So(err, ShouldBeNil)
 				So(v, ShouldEqual, "constructor init arg is a=55, b=b, c={}")
 			})
@@ -106,7 +106,7 @@ func TestCreateState(t *testing.T) {
 				Reset(func() {
 					state.Terminate(ctx)
 				})
-				ps, ok := state.(*pyWritableState)
+				ps, ok := state.(*WritableState)
 				So(ok, ShouldBeTrue)
 				So(ps.writeMethodName, ShouldEqual, "write")
 

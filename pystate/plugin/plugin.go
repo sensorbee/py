@@ -7,5 +7,5 @@ import (
 
 func init() {
 	udf.MustRegisterGlobalUDSCreator("pystate", &pystate.Creator{})
-	udf.MustRegisterGlobalUDF("pystate_func", udf.MustConvertGeneric(pystate.Func))
+	udf.MustRegisterGlobalUDF("pystate_func", udf.MustConvertGeneric(pystate.CallMethod))
 }
