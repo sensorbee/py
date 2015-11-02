@@ -22,15 +22,13 @@ var ErrAlreadyTerminated = errors.New("pystate is already terminated")
 // doesn't acquire lock and the caller should provide concurrency control
 // over them. Each method describes what kind of lock it requires.
 type Base struct {
-	modulePath      string
-	moduleName      string
-	className       string
-	writeMethodName string
-
-	ins *py.ObjectInstance
+	params BaseParams
+	ins    *py.ObjectInstance
 }
 
-type pyStateMsgpack struct {
+// BaseParams has parameters for Base given in WITH clause of CREATE STATE
+// statement.
+type BaseParams struct {
 	ModulePath      string `codec:"module_path"`
 	ModuleName      string `codec:"module_name"`
 	ClassName       string `codec:"class_name"`
@@ -38,65 +36,55 @@ type pyStateMsgpack struct {
 }
 
 // NewBase creates a new Base state.
-func NewBase(modulePathName, moduleName, className string, writeMethodName string,
-	params data.Map) (*Base, error) {
+func NewBase(baseParams *BaseParams, params data.Map) (*Base, error) {
 	var (
 		ins py.ObjectInstance
 		err error
 	)
+
+	// TODO: remove this ugly if block
 	if params == nil || len(params) == 0 {
-		ins, err = newPyInstance("create", modulePathName, moduleName, className)
+		ins, err = newPyInstance("create", baseParams)
 	} else {
-		ins, err = newPyInstance("create", modulePathName, moduleName, className,
-			params)
+		ins, err = newPyInstance("create", baseParams, params)
 	}
 	if err != nil {
 		return nil, err
 	}
 
 	s := Base{}
-	s.set(ins, modulePathName, moduleName, className, writeMethodName)
+	s.set(ins, baseParams)
 	return &s, nil
 }
 
 // newPyInstance creates a new Python class instance.
 // User must call DecRef method to release a resource.
-func newPyInstance(createMethodName, modulePathName, moduleName, className string,
+func newPyInstance(createMethodName string, baseParams *BaseParams,
 	args ...data.Value) (py.ObjectInstance, error) {
 	var null py.ObjectInstance
-	py.ImportSysAndAppendPath(modulePathName)
+	py.ImportSysAndAppendPath(baseParams.ModulePath)
 
-	mdl, err := py.LoadModule(moduleName)
+	mdl, err := py.LoadModule(baseParams.ModuleName)
 	if err != nil {
 		return null, err
 	}
 	defer mdl.DecRef()
 
-	class, err := mdl.GetClass(className)
+	class, err := mdl.GetClass(baseParams.ClassName)
 	if err != nil {
 		return null, err
 	}
 	defer class.DecRef()
 
-	var ins py.Object
-	if args == nil || len(args) == 0 {
-		ins, err = class.CallDirect(createMethodName)
-	} else {
-		ins, err = class.CallDirect(createMethodName, args...)
-	}
+	ins, err := class.CallDirect(createMethodName, args...)
 	return py.ObjectInstance{ins}, err
 }
 
-func (s *Base) set(ins py.ObjectInstance, modulePathName, moduleName,
-	className, writeMethodName string) {
+func (s *Base) set(ins py.ObjectInstance, baseParams *BaseParams) {
 	if s.ins != nil {
 		s.ins.DecRef()
 	}
-
-	s.modulePath = modulePathName
-	s.moduleName = moduleName
-	s.className = className
-	s.writeMethodName = writeMethodName
+	s.params = *baseParams
 	s.ins = &ins
 }
 
@@ -132,7 +120,7 @@ func (s *Base) Write(ctx *core.Context, t *core.Tuple) error {
 	if s.ins == nil {
 		return ErrAlreadyTerminated
 	}
-	_, err := s.ins.Call(s.writeMethodName, t.Data)
+	_, err := s.ins.Call(s.params.WriteMethodName, t.Data)
 	return err
 }
 
@@ -198,35 +186,28 @@ func (s *Base) savePyMsgpack(w io.Writer) error {
 	}
 
 	// Save parameter of Base before save python's model
-	save := &pyStateMsgpack{
-		ModulePath:      s.modulePath,
-		ModuleName:      s.moduleName,
-		ClassName:       s.className,
-		WriteMethodName: s.writeMethodName,
-	}
-
 	msgpackHandle := &codec.MsgpackHandle{}
 	var out []byte
 	enc := codec.NewEncoderBytes(&out, msgpackHandle)
-	if err := enc.Encode(save); err != nil {
+	if err := enc.Encode(&s.params); err != nil {
 		return err
 	}
 
-	// Write size of pyStateMsgpack
+	// Write size of BaseParams
 	dataSize := uint32(len(out))
 	err := binary.Write(w, binary.LittleEndian, dataSize)
 	if err != nil {
 		return err
 	}
 
-	// Write pyStateMsgpack in msgpack
+	// Write BaseParams in msgpack
 	n, err := w.Write(out)
 	if err != nil {
 		return err
 	}
 
 	if n < len(out) {
-		return errors.New("cannot save the pyStateMsgpack data")
+		return errors.New("cannot save the BaseParams data")
 	}
 
 	return nil
@@ -265,21 +246,21 @@ func (s *Base) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
 		return err
 	}
 	if dataSize == 0 {
-		return errors.New("size of pyStateMsgpack must be greater than 0")
+		return errors.New("size of BaseParams must be greater than 0")
 	}
 
-	// Read pyStateMsgpack from reader
+	// Read BaseParams from reader
 	buf := make([]byte, dataSize)
 	n, err := r.Read(buf)
 	if err != nil {
 		return err
 	}
 	if n != int(dataSize) {
-		return errors.New("read size is different from pyStateMsgpack")
+		return errors.New("read size is different from BaseParams")
 	}
 
-	// Desirialize pyStateMsgpack
-	var saved pyStateMsgpack
+	// Desirialize BaseParams
+	var saved BaseParams
 	msgpackHandle := &codec.MsgpackHandle{}
 	dec := codec.NewDecoderBytes(buf, msgpackHandle)
 	if err := dec.Decode(&saved); err != nil {
@@ -316,8 +297,7 @@ func (s *Base) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
 	}
 	closeTemp()
 
-	ins, err := newPyInstance("load", saved.ModulePath, saved.ModuleName,
-		saved.ClassName, []data.Value{data.String(filepath), params}...)
+	ins, err := newPyInstance("load", &saved, []data.Value{data.String(filepath), params}...)
 	if err != nil {
 		return err
 	}
@@ -328,8 +308,7 @@ func (s *Base) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
 	// required to reduce memory consumption. It should be configurable.
 
 	// Exchange instance in `s` when Load succeeded
-	s.set(ins, saved.ModulePath, saved.ModuleName, saved.ClassName,
-		saved.WriteMethodName)
+	s.set(ins, &saved)
 	return nil
 }
 

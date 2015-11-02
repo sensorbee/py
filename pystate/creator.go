@@ -78,7 +78,7 @@ func (c *Creator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
 		return nil, err
 	}
 
-	if s.base.writeMethodName != "" {
+	if s.base.params.WriteMethodName != "" {
 		return &writableState{
 			// Although this copies a RWMutex, the mutex isn't being locked at
 			// the moment and it's safe to copy it now.

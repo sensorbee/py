@@ -19,7 +19,12 @@ type state struct {
 // New creates `core.SharedState` for python constructor.
 func New(modulePathName, moduleName, className string, writeMethodName string,
 	params data.Map) (core.SharedState, error) {
-	bs, err := NewBase(modulePathName, moduleName, className, writeMethodName, params)
+	bs, err := NewBase(&BaseParams{
+		ModulePath:      modulePathName,
+		ModuleName:      moduleName,
+		ClassName:       className,
+		WriteMethodName: writeMethodName,
+	}, params)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +33,7 @@ func New(modulePathName, moduleName, className string, writeMethodName string,
 		base: bs,
 	}
 	// check if we have a writable state
-	if bs.writeMethodName != "" {
+	if bs.params.WriteMethodName != "" {
 		return &writableState{
 			// Although this copies a RWMutex, the mutex isn't being locked at
 			// the moment and it's safe to copy it now.

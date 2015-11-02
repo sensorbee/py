@@ -25,8 +25,8 @@ func TestCreateState(t *testing.T) {
 				})
 				ps, ok := st.(*state)
 				So(ok, ShouldBeTrue)
-				So(ps.base.modulePath, ShouldEqual, "")
-				So(ps.base.moduleName, ShouldEqual, "_test_creator_module")
+				So(ps.base.params.ModulePath, ShouldEqual, "")
+				So(ps.base.params.ModuleName, ShouldEqual, "_test_creator_module")
 
 				ctx.SharedStates.Add("creator_test", "creator_test", st)
 				Reset(func() {
@@ -108,7 +108,7 @@ func TestCreateState(t *testing.T) {
 				})
 				ps, ok := state.(*writableState)
 				So(ok, ShouldBeTrue)
-				So(ps.base.writeMethodName, ShouldEqual, "write")
+				So(ps.base.params.WriteMethodName, ShouldEqual, "write")
 
 				t := &core.Tuple{}
 				err = ps.Write(ctx, t)
