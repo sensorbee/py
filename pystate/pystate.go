@@ -18,16 +18,6 @@ import (
 // SharedState is terminated.
 var ErrAlreadyTerminated = errors.New("PyState is already terminated")
 
-// PyState is a `SharedState` for python instance.
-type PyState interface {
-	core.SharedState
-	lock()
-	unlock()
-	rLock()
-	rUnlock()
-	Call(name string, args ...data.Value) (data.Value, error)
-}
-
 // State is a wrapper of a UDS written in Python. State is save/loadable,
 // but doesn't support Write.
 type State struct {
@@ -41,11 +31,6 @@ type State struct {
 	rwm sync.RWMutex
 }
 
-// WritableState is essentially same as State except its Write method support.
-type WritableState struct {
-	State
-}
-
 type pyStateMsgpack struct {
 	ModulePath      string `codec:"module_path"`
 	ModuleName      string `codec:"module_name"`
@@ -53,25 +38,9 @@ type pyStateMsgpack struct {
 	WriteMethodName string `codec:"write_method"`
 }
 
-func (s *State) lock() {
-	s.rwm.Lock()
-}
-
-func (s *State) unlock() {
-	s.rwm.Unlock()
-}
-
-func (s *State) rLock() {
-	s.rwm.RLock()
-}
-
-func (s *State) rUnlock() {
-	s.rwm.RUnlock()
-}
-
 // New creates `core.SharedState` for python constructor.
 func New(modulePathName, moduleName, className string, writeMethodName string,
-	params data.Map) (PyState, error) {
+	params data.Map) (core.SharedState, error) {
 
 	var ins py.ObjectInstance
 	var err error
@@ -151,22 +120,12 @@ func (s *State) Terminate(ctx *core.Context) error {
 	return nil
 }
 
-// Write calls "write" function of the Python UDS.
-func (s *WritableState) Write(ctx *core.Context, t *core.Tuple) error {
-	s.lock()
-	defer s.unlock()
-	if s.ins == nil {
-		return ErrAlreadyTerminated
-	}
-
-	_, err := s.ins.Call(s.writeMethodName, t.Data)
-	return err
-}
-
 // Call calls an instance method and returns its value.
 func (s *State) Call(funcName string, dt ...data.Value) (data.Value, error) {
-	s.lock()
-	defer s.unlock()
+	// Although this call may modify the state of the Python UDS, it doesn't
+	// change this State Go instance itself. Therefore, RLock is fine here.
+	s.rwm.RLock()
+	defer s.rwm.RUnlock()
 	if s.ins == nil {
 		return nil, ErrAlreadyTerminated
 	}
@@ -174,24 +133,13 @@ func (s *State) Call(funcName string, dt ...data.Value) (data.Value, error) {
 	return s.ins.Call(funcName, dt...)
 }
 
-// CallMethod calls an instance method and returns its value.
-func CallMethod(ctx *core.Context, stateName, funcName string, dt ...data.Value) (
-	data.Value, error) {
-	s, err := lookupPyState(ctx, stateName)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.Call(funcName, dt...)
-}
-
 // Save saves the model of the state. It saves its internal state and also calls
 // 'save' method of the Python UDS. The Python UDS must save all the information
 // necessary to reconstruct the current state including parameters passed by
 // CREATE STATE statement.
 func (s *State) Save(ctx *core.Context, w io.Writer, params data.Map) error {
-	s.rLock()
-	defer s.rUnlock()
+	s.rwm.RLock()
+	defer s.rwm.RUnlock()
 	if s.ins == nil {
 		return ErrAlreadyTerminated
 	}
@@ -285,8 +233,8 @@ func (s *State) savePyMsgpack(w io.Writer) error {
 // calls 'load' static method of the Python UDS. 'load' static method creates
 // a new instance of the Python UDS.
 func (s *State) Load(ctx *core.Context, r io.Reader, params data.Map) error {
-	s.lock()
-	defer s.unlock()
+	s.rwm.Lock()
+	defer s.rwm.Unlock()
 	if s.ins == nil {
 		return ErrAlreadyTerminated
 	}
@@ -382,15 +330,50 @@ func (s *State) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
 	return nil
 }
 
-func lookupPyState(ctx *core.Context, stateName string) (PyState, error) {
+// WritableState is essentially same as State except its Write method support.
+type WritableState struct {
+	State
+}
+
+// Write calls "write" function of the Python UDS.
+func (s *WritableState) Write(ctx *core.Context, t *core.Tuple) error {
+	// Although this write may modify the state of the Python UDS, it doesn't
+	// change this State Go instance itself. Therefore, RLock is fine here.
+	s.rwm.RLock()
+	defer s.rwm.RUnlock()
+	if s.ins == nil {
+		return ErrAlreadyTerminated
+	}
+
+	_, err := s.ins.Call(s.writeMethodName, t.Data)
+	return err
+}
+
+// CallMethod calls an instance method and returns its value.
+func CallMethod(ctx *core.Context, stateName, funcName string, dt ...data.Value) (
+	data.Value, error) {
+	s, err := lookupPyState(ctx, stateName)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Call(funcName, dt...)
+}
+
+type pyState interface {
+	core.SharedState
+	Call(funcName string, dt ...data.Value) (data.Value, error)
+}
+
+func lookupPyState(ctx *core.Context, stateName string) (pyState, error) {
 	st, err := ctx.SharedStates.Get(stateName)
 	if err != nil {
 		return nil, err
 	}
 
-	if s, ok := st.(PyState); ok {
+	if s, ok := st.(pyState); ok {
 		return s, nil
 	}
 
-	return nil, fmt.Errorf("state '%v' isn't a PyState", stateName)
+	return nil, fmt.Errorf("state '%v' isn't a pystate.State or pystate.WritableState", stateName)
 }
