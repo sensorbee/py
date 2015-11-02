@@ -1,9 +1,8 @@
-package py
+package pystate
 
 import (
 	"fmt"
-	py "pfi/sensorbee/py/p"
-	"pfi/sensorbee/py/pystate"
+	"pfi/sensorbee/py"
 	"pfi/sensorbee/sensorbee/bql/udf"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
@@ -19,7 +18,7 @@ type defaultCreator struct {
 
 func (c *defaultCreator) CreateState(ctx *core.Context, params data.Map) (
 	core.SharedState, error) {
-	return pystate.New(c.modulePath, c.moduleName, c.className, c.writeMethodName,
+	return New(c.modulePath, c.moduleName, c.className, c.writeMethodName,
 		params)
 }
 
