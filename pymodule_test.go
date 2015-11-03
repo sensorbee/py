@@ -165,6 +165,19 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual, ShouldEqual, "instance method test1")
 			})
+
+			Convey("Then process should get a new instance with args", func() {
+				args := []data.Value{data.Int(55)}
+				kwdArgs := data.Map{
+					"v1": data.String("homhom"),
+				}
+				obj, err := class.CallDirect("get_instance2", args, kwdArgs)
+				So(err, ShouldBeNil)
+				ins := &ObjectInstance{obj}
+				actual, err := ins.Call("confirm")
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "55_5_{'v1': 'homhom'}")
+			})
 		})
 
 		Convey("When get a new child class of PythonTest3 instance", func() {
