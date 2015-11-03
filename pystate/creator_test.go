@@ -78,7 +78,7 @@ func TestCreateState(t *testing.T) {
 			})
 		})
 
-		SkipConvey("When the parameter has constructor arguments which lack optional value", func() {
+		Convey("When the parameter has constructor arguments which lack optional value", func() {
 			params := data.Map{
 				"module_name": data.String("_test_creator_module"),
 				"class_name":  data.String("TestClass3"),

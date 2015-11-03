@@ -133,5 +133,5 @@ func (m *ObjectModule) GetClass(name string) (ObjectInstance, error) {
 //  argument type: ...data.Value
 //  return type:   data.Value
 func (m *ObjectModule) Call(name string, args ...data.Value) (data.Value, error) {
-	return invoke(m.p, name, args...)
+	return invoke(m.p, name, nil, args...)
 }

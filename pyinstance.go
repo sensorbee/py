@@ -21,7 +21,7 @@ type ObjectInstance struct {
 //  return type:   data.Value
 func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 	error) {
-	return invoke(ins.p, name, args...)
+	return invoke(ins.p, name, nil, args...)
 }
 
 // CallDirect calls `name` function.
@@ -32,7 +32,14 @@ func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 // returned.
 func (ins *ObjectInstance) CallDirect(name string, args ...data.Value) (Object,
 	error) {
-	return invokeDirect(ins.p, name, args...)
+	return invokeDirect(ins.p, name, nil, args...)
+}
+
+// CallDirectWithKwd calls `name` function with named arguments and returns the
+// function's return value.
+func (ins *ObjectInstance) CallDirectWithKwd(name string, kwdArgs data.Map) (Object,
+	error) {
+	return invokeDirect(ins.p, name, kwdArgs)
 }
 
 func newInstance(m *ObjectModule, name string, kwdArgs data.Map,
