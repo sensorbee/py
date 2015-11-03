@@ -168,6 +168,18 @@ func (s *Base) Terminate(ctx *core.Context) error {
 	return nil
 }
 
+// CheckTermination checks if the Base is already terminated. It returns nil
+// if the Base is still working. It returns ErrAlreadyTerminated if the Base
+// has already been terminated.
+//
+// This method requires read-lock.
+func (s *Base) CheckTermination() error {
+	if s.ins == nil {
+		return ErrAlreadyTerminated
+	}
+	return nil
+}
+
 // Call calls an instance method and returns its value.
 //
 // Although this call may modify the state of the Python UDS, it doesn't

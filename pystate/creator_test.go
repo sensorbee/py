@@ -17,14 +17,15 @@ func TestCreateState(t *testing.T) {
 				"module_name": data.String("_test_creator_module"),
 				"class_name":  data.String("TestClass"),
 			}
+			st, err := ct.CreateState(ctx, params)
+			So(err, ShouldBeNil)
+			Reset(func() {
+				st.Terminate(ctx)
+			})
+			ps, ok := st.(*state)
+			So(ok, ShouldBeTrue)
+
 			Convey("Then the state should be created and set default value", func() {
-				st, err := ct.CreateState(ctx, params)
-				So(err, ShouldBeNil)
-				Reset(func() {
-					st.Terminate(ctx)
-				})
-				ps, ok := st.(*state)
-				So(ok, ShouldBeTrue)
 				So(ps.base.params.ModulePath, ShouldEqual, "")
 				So(ps.base.params.ModuleName, ShouldEqual, "_test_creator_module")
 
@@ -44,6 +45,12 @@ func TestCreateState(t *testing.T) {
 						So(err, ShouldNotBeNil)
 					})
 				})
+			})
+
+			Convey("Then calling Terminate actually terminates the state", func() {
+				So(ps.base.CheckTermination(), ShouldBeNil)
+				So(ps.Terminate(ctx), ShouldBeNil)
+				So(ps.base.CheckTermination(), ShouldPointTo, ErrAlreadyTerminated)
 			})
 		})
 
