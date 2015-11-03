@@ -110,7 +110,7 @@ func NewBase(baseParams *BaseParams, params data.Map) (*Base, error) {
 		err error
 	)
 
-	ins, err = newPyInstance("create", baseParams, params)
+	ins, err = newPyInstance("create", baseParams, nil, params)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func NewBase(baseParams *BaseParams, params data.Map) (*Base, error) {
 
 // newPyInstance creates a new Python class instance.
 // User must call DecRef method to release a resource.
-func newPyInstance(createMethodName string, baseParams *BaseParams, args data.Map) (
-	py.ObjectInstance, error) {
+func newPyInstance(createMethodName string, baseParams *BaseParams,
+	args []data.Value, kwdArgs data.Map) (py.ObjectInstance, error) {
 	var null py.ObjectInstance
 	py.ImportSysAndAppendPath(baseParams.ModulePath)
 
@@ -139,7 +139,7 @@ func newPyInstance(createMethodName string, baseParams *BaseParams, args data.Ma
 	}
 	defer class.DecRef()
 
-	ins, err := class.CallDirectWithKwd(createMethodName, args)
+	ins, err := class.CallDirect(createMethodName, nil, kwdArgs)
 	return py.ObjectInstance{ins}, err
 }
 
@@ -372,8 +372,8 @@ func (s *Base) loadPyMsgpackAndDataV1(ctx *core.Context, r io.Reader,
 	}
 	closeTemp()
 
-	params["filepath"] = data.String(filepath)
-	ins, err := newPyInstance("load", &saved, params)
+	ins, err := newPyInstance("load", &saved, []data.Value{data.String(filepath)},
+		params)
 	if err != nil {
 		return err
 	}

@@ -56,14 +56,14 @@ func TestPyFunc(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 
-		obj, err := mdl.NewInstance("negator")
+		obj, err := mdl.NewInstance("negator", nil, nil)
 		So(err, ShouldBeNil)
 		Reset(func() {
 			obj.DecRef()
 		})
 		negator := ObjectFunc{obj.Object}
 
-		alwaysFailObj, err := mdl.NewInstance("alwaysFail")
+		alwaysFailObj, err := mdl.NewInstance("alwaysFail", nil, nil)
 		So(err, ShouldBeNil)
 		Reset(func() {
 			alwaysFailObj.DecRef()
