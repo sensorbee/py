@@ -37,31 +37,7 @@ func invokeDirect(pyObj *C.PyObject, name string, args ...data.Value) (Object, e
 		state := GILState_Ensure()
 		defer GILState_Release(state)
 
-		var res Object
-		pyFunc, err := getPyFunc(pyObj, name)
-		if err != nil {
-			ch <- &Result{res, fmt.Errorf("fail to get '%v' function: %v", name,
-				err.Error())}
-			return
-		}
-		defer pyFunc.decRef()
-
-		pyArg, err := convertArgsGo2Py(args)
-		if err != nil {
-			ch <- &Result{res, fmt.Errorf(
-				"fail to convert argument in calling '%v' function: %v",
-				name, err.Error())}
-			return
-		}
-		defer pyArg.decRef()
-
-		ret, err := pyFunc.callObject(pyArg)
-		if err != nil {
-			ch <- &Result{res, fmt.Errorf("fail to call '%v' function: %v", name,
-				err.Error())}
-			return
-		}
-
+		ret, err := callMethod(pyObj, name, args...)
 		ch <- &Result{ret, err}
 	}()
 	res := <-ch
@@ -88,28 +64,9 @@ func invoke(pyObj *C.PyObject, name string, args ...data.Value) (data.Value, err
 		state := GILState_Ensure()
 		defer GILState_Release(state)
 
-		var res data.Value
-		pyFunc, err := getPyFunc(pyObj, name)
+		ret, err := callMethod(pyObj, name, args...)
 		if err != nil {
-			ch <- &Result{res, fmt.Errorf("fail to get '%v' function: %v", name,
-				err.Error())}
-			return
-		}
-		defer pyFunc.decRef()
-
-		pyArg, err := convertArgsGo2Py(args)
-		if err != nil {
-			ch <- &Result{res, fmt.Errorf(
-				"fail to convert argument in calling '%v' function: %v",
-				name, err.Error())}
-			return
-		}
-		defer pyArg.decRef()
-
-		ret, err := pyFunc.callObject(pyArg)
-		if err != nil {
-			ch <- &Result{res, fmt.Errorf("fail to call '%v' function: %v", name,
-				err.Error())}
+			ch <- &Result{data.Null{}, err}
 			return
 		}
 		defer ret.decRef()
@@ -120,6 +77,32 @@ func invoke(pyObj *C.PyObject, name string, args ...data.Value) (data.Value, err
 	res := <-ch
 
 	return res.val, res.err
+}
+
+// callMethod calls `name` method on `pyObj`. This function is not locked GIL
+func callMethod(pyObj *C.PyObject, name string, args ...data.Value) (Object,
+	error) {
+	pyFunc, err := getPyFunc(pyObj, name)
+	if err != nil {
+		return Object{}, fmt.Errorf("fail to get '%v' function: %v", name,
+			err.Error())
+	}
+	defer pyFunc.decRef()
+
+	pyArg, err := convertArgsGo2Py(args)
+	if err != nil {
+		return Object{}, fmt.Errorf(
+			"fail to convert argument in calling '%v' function: %v", name,
+			err.Error())
+	}
+	defer pyArg.decRef()
+
+	ret, err := pyFunc.callObject(pyArg)
+	if err != nil {
+		return Object{}, fmt.Errorf("fail to call '%v' function: %v", name,
+			err.Error())
+	}
+	return ret, nil
 }
 
 // TODO should be placed at internal package
