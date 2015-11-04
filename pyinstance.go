@@ -21,7 +21,7 @@ type ObjectInstance struct {
 //  return type:   data.Value
 func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 	error) {
-	return invoke(ins.p, name, args...)
+	return invoke(ins.p, name, args, nil)
 }
 
 // CallDirect calls `name` function.
@@ -30,13 +30,13 @@ func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 //
 // This method is suitable for getting the instance object that called method
 // returned.
-func (ins *ObjectInstance) CallDirect(name string, args ...data.Value) (Object,
-	error) {
-	return invokeDirect(ins.p, name, args...)
+func (ins *ObjectInstance) CallDirect(name string, args []data.Value,
+	kwdArg data.Map) (Object, error) {
+	return invokeDirect(ins.p, name, args, kwdArg)
 }
 
-func newInstance(m *ObjectModule, name string, kwdArgs data.Map,
-	args ...data.Value) (ObjectInstance, error) {
+func newInstance(m *ObjectModule, name string, args []data.Value, kwdArgs data.Map) (
+	ObjectInstance, error) {
 
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
@@ -59,9 +59,19 @@ func newInstance(m *ObjectModule, name string, kwdArgs data.Map,
 		}
 		defer C.Py_DecRef(pyInstance)
 
+		// no named arguments
+		pyArg, err := convertArgsGo2Py(args)
+		if err != nil {
+			ch <- &Result{ObjectInstance{}, fmt.Errorf(
+				"fail to convert non named arguments in creating '%v' instance: %v",
+				name, err.Error())}
+			return
+		}
+		defer pyArg.decRef()
+
 		// named arguments
 		var pyKwdArg *C.PyObject
-		if kwdArgs == nil || len(kwdArgs) == 0 {
+		if len(kwdArgs) == 0 {
 			pyKwdArg = nil
 		} else {
 			o, err := newPyObj(kwdArgs)
@@ -74,26 +84,7 @@ func newInstance(m *ObjectModule, name string, kwdArgs data.Map,
 			pyKwdArg = o.p
 		}
 
-		// no named arguments
-		pyArg := C.PyTuple_New(C.Py_ssize_t(len(args)))
-		if pyArg == nil {
-			ch <- &Result{ObjectInstance{}, getPyErr()}
-			return
-		}
-		defer C.Py_DecRef(pyArg)
-
-		for i, v := range args {
-			o, err := newPyObj(v)
-			if err != nil {
-				ch <- &Result{ObjectInstance{}, fmt.Errorf(
-					"fail to convert non named arguments in creating '%v' instance: %v",
-					name, err.Error())}
-				return
-			}
-			C.PyTuple_SetItem(pyArg, C.Py_ssize_t(i), o.p)
-		}
-
-		ret := C.PyObject_Call(pyInstance, pyArg, pyKwdArg)
+		ret := C.PyObject_Call(pyInstance, pyArg.p, pyKwdArg)
 		if ret == nil {
 			ch <- &Result{ObjectInstance{}, fmt.Errorf(
 				"fail to create '%v' instance: %v", name, getPyErr())}

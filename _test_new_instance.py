@@ -42,6 +42,17 @@ class PythonTest3():
     def get_instance_str(self):
         return "instance method " + self.val1
 
+    @staticmethod
+    def get_instance2(a, b=5, **c):
+        ins = PythonTest3()
+        ins.a = a
+        ins.b = b
+        ins.c = c
+        return ins
+
+    def confirm(self):
+        return str(self.a) + '_' + str(self.b) + '_' + str(self.c)
+
 
 class ChildClass(PythonTest3):
     v = "instance_value"

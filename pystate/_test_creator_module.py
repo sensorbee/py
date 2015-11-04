@@ -12,7 +12,7 @@ class TestClass(object):
 class TestClass2(object):
 
     @staticmethod
-    def create(params):  # should be **params
+    def create(**params):
         self = TestClass2()
         self.v1 = params['v1']
         self.v2 = params['v2']
