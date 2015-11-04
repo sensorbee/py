@@ -38,7 +38,7 @@ func invokeDirect(pyObj *C.PyObject, name string, args []data.Value,
 		state := GILState_Ensure()
 		defer GILState_Release(state)
 
-		ret, err := callMethod(pyObj, name, kwdArgs, args...)
+		ret, err := callMethod(pyObj, name, args, kwdArgs)
 		ch <- &Result{ret, err}
 	}()
 	res := <-ch
@@ -66,7 +66,7 @@ func invoke(pyObj *C.PyObject, name string, args []data.Value, kwdArgs data.Map)
 		state := GILState_Ensure()
 		defer GILState_Release(state)
 
-		ret, err := callMethod(pyObj, name, kwdArgs, args...)
+		ret, err := callMethod(pyObj, name, args, kwdArgs)
 		if err != nil {
 			ch <- &Result{data.Null{}, err}
 			return
@@ -82,8 +82,8 @@ func invoke(pyObj *C.PyObject, name string, args []data.Value, kwdArgs data.Map)
 }
 
 // callMethod calls `name` method on `pyObj`. This function is not locked GIL
-func callMethod(pyObj *C.PyObject, name string, kwdArgs data.Map,
-	args ...data.Value) (Object, error) {
+func callMethod(pyObj *C.PyObject, name string, args []data.Value,
+	kwdArgs data.Map) (Object, error) {
 	pyFunc, err := getPyFunc(pyObj, name)
 	if err != nil {
 		return Object{}, fmt.Errorf("fail to get '%v' function: %v", name,
@@ -141,27 +141,22 @@ func getPyFunc(pyObj *C.PyObject, name string) (ObjectFunc, error) {
 // callObject executes python function, using `PyObject_CallObject`. Returns a
 // `PyObject` even if result values are more than one. When a value will be set
 // directory, and values will be set as a `PyTuple` object.
-func (f *ObjectFunc) callObject(arg Object) (po Object, err error) {
-	po = Object{
-		p: C.PyObject_CallObject(f.p, arg.p),
+func (f *ObjectFunc) callObject(arg Object) (Object, error) {
+	po := C.PyObject_CallObject(f.p, arg.p)
+	if po == nil {
+		return Object{}, getPyErr()
 	}
-	if po.p == nil {
-		err = getPyErr()
-	}
-	return
+	return Object{p: po}, nil
 }
 
 // callObjectWithKwd executes python function, using `PyObject_Call`. Error
 // specification is same as `callObject`.
-func (f *ObjectFunc) callObjectWithKwd(kwdArg Object, arg Object) (po Object,
-	err error) {
-	po = Object{
-		p: C.PyObject_Call(f.p, arg.p, kwdArg.p),
+func (f *ObjectFunc) callObjectWithKwd(kwdArg Object, arg Object) (Object, error) {
+	po := C.PyObject_Call(f.p, arg.p, kwdArg.p)
+	if po == nil {
+		return Object{}, getPyErr()
 	}
-	if po.p == nil {
-		err = getPyErr()
-	}
-	return
+	return Object{p: po}, nil
 }
 
 func convertArgsGo2Py(args []data.Value) (Object, error) {
