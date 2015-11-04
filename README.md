@@ -54,8 +54,11 @@ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -v 2.7.9
 
 ```python
 class SampleClass(object):
-    def __init__(self, arg1, arg2='arg2', arg3='arg3', **arg4):
-        # initializing
+    @staticmethod
+    def create(arg1, arg2='arg2', arg3='arg3', **arg4):
+        self = SampleClass()
+        # initialize
+        return self
         # blow BQL sample will set like:
         # arg1 = 'arg1'
         # arg2 = 'arg2' # default value
@@ -67,6 +70,13 @@ class SampleClass(object):
 
     def write_method(self, value):
         # do something
+
+    @staticmethod
+    def load(filepath, params):
+        # load from filepath and set params
+
+    def save(self, filepath, params):
+        # save params and output on filepath
 ```
 
 The above python class can be created as SharedState, BQL is written like:
@@ -195,3 +205,7 @@ import sample_module
 
 sample_module.sample_module_method(arg1, arg2)
 ```
+
+## Save and Load
+
+[TODO]

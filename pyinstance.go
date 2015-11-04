@@ -17,17 +17,13 @@ type ObjectInstance struct {
 }
 
 // Call calls `name` function.
-//  argument type: ...data.Value
-//  return type:   data.Value
+// [TODO] this function is not supported named arguments
 func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 	error) {
 	return invoke(ins.p, name, args, nil)
 }
 
-// CallDirect calls `name` function.
-//  argument type: ...data.Value
-//  return type:   Object.
-//
+// CallDirect calls `name` function and return `PyObject` directly.
 // This method is suitable for getting the instance object that called method
 // returned.
 func (ins *ObjectInstance) CallDirect(name string, args []data.Value,

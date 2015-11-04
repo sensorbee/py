@@ -48,11 +48,9 @@ func LoadModule(name string) (ObjectModule, error) {
 
 // NewInstance returns 'name' constructor with named arguments.
 //
-//  ```python
 //  class Sample(object):
 //  	def __init__(self, a, b=5, **c):
 //  		# initializing
-//  ```
 //
 // To get that "Sample" python instance, callers use a map object as named
 // arguments, and set `kwdArgs`, like:
@@ -63,19 +61,22 @@ func LoadModule(name string) (ObjectModule, error) {
 //  	"hoge1": data.Value, // ex) data.Float(100.0)
 //  	"hoge2": data.Value, // ex) data.True
 //  }
-// `arg1` is same as `Sawmple(a-'v1', b=5, hoge1=100.0, hoge2=True)`.
+//
+// `arg1` is same as `Sample(a-'v1', b=5, hoge1=100.0, hoge2=True)`.
 //
 //  arg2 := data.Map{
 //  	"a":     data.Value, // ex) data.String("v1")
 //  	"hoge1": data.Value, // ex) data.Float(100.0)
 //  	"hoge2": data.Value, // ex) data.True
 //  }
+//
 // `arg2` is same as `Sample(a='v1', hoge1=100.0, hoge2=True)`, and `self.b`
 // will be set default value (=5).
 //
 //  arg3 := data.Map{
 //  	"a": data.Value, // ex) data.String("v1")
 //  }
+//
 // `arg3` is same as `Sample(a='v1')`, `self.b` will be set default value (=5),
 // and `self.c` will be set `{}`
 func (m *ObjectModule) NewInstance(name string, args []data.Value, kwdArgs data.Map) (
@@ -112,9 +113,8 @@ func (m *ObjectModule) GetClass(name string) (ObjectInstance, error) {
 	return res.val, res.err
 }
 
-// Call calls `name` function.
-//  argument type: ...data.Value
-//  return type:   data.Value
+// Call calls `name` function. This function is supported for module method of
+// python.
 func (m *ObjectModule) Call(name string, args ...data.Value) (data.Value, error) {
 	return invoke(m.p, name, args, nil)
 }
