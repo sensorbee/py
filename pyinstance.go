@@ -6,8 +6,8 @@ package py
 import "C"
 import (
 	"fmt"
+	"pfi/sensorbee/py/mainthread"
 	"pfi/sensorbee/sensorbee/data"
-	"runtime"
 	"unsafe"
 )
 
@@ -45,10 +45,13 @@ func newInstance(m *ObjectModule, name string, args []data.Value, kwdArgs data.M
 		err error
 	}
 	ch := make(chan *Result, 1)
-	go func() {
-		runtime.LockOSThread()
-		state := GILState_Ensure()
-		defer GILState_Release(state)
+	mainthread.Exec(func() {
+		defer func() {
+			if r := recover(); r != nil {
+				ch <- &Result{ObjectInstance{}, fmt.Errorf(
+					"cannot call '%v' due to panic: %v", name, r)}
+			}
+		}()
 
 		pyInstance := C.PyObject_GetAttrString(m.p, cName)
 		if pyInstance == nil {
@@ -90,7 +93,7 @@ func newInstance(m *ObjectModule, name string, args []data.Value, kwdArgs data.M
 			return
 		}
 		ch <- &Result{ObjectInstance{Object{p: ret}}, nil}
-	}()
+	})
 	res := <-ch
 
 	return res.val, res.err

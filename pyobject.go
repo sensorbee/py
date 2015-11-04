@@ -8,7 +8,7 @@ void XDecRef(PyObject *o) {
 */
 import "C"
 import (
-	"runtime"
+	"pfi/sensorbee/py/mainthread"
 )
 
 // Object is a bind of `*C.PyObject`
@@ -21,16 +21,9 @@ type Object struct {
 // it acquires GIL of Python interpreter.
 // A user can safely call this method even when its target object is null.
 func (o *Object) DecRef() {
-	ch := make(chan bool, 1)
-	go func() {
-		runtime.LockOSThread()
-		state := GILState_Ensure()
-		defer GILState_Release(state)
-
+	mainthread.ExecSync(func() { // TODO: This Exec should probably be removed.
 		C.XDecRef(o.p)
-		ch <- true
-	}()
-	<-ch
+	})
 }
 
 // decRef decrease reference counter of `C.PyObject`

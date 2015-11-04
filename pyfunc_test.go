@@ -2,8 +2,8 @@ package py
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
+	"pfi/sensorbee/py/mainthread"
 	"pfi/sensorbee/sensorbee/data"
-	"runtime"
 	"testing"
 )
 
@@ -130,13 +130,10 @@ func safePythonCall(f func() (Object, error)) (Object, error) {
 	}
 
 	c := make(chan ret)
-	go func() {
-		runtime.LockOSThread()
-		state := GILState_Ensure()
-		defer GILState_Release(state)
+	mainthread.Exec(func() {
 		o, e := f()
 		c <- ret{o, e}
-	}()
+	})
 	r := <-c
 	return r.o, r.e
 }

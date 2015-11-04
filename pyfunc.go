@@ -6,8 +6,8 @@ package py
 import "C"
 import (
 	"fmt"
+	"pfi/sensorbee/py/mainthread"
 	"pfi/sensorbee/sensorbee/data"
-	"runtime"
 	"unsafe"
 )
 
@@ -26,7 +26,7 @@ func invokeDirect(pyObj *C.PyObject, name string, args []data.Value,
 		err error
 	}
 	ch := make(chan *Result, 1)
-	go func() {
+	mainthread.Exec(func() {
 		defer func() {
 			if r := recover(); r != nil {
 				ch <- &Result{Object{}, fmt.Errorf(
@@ -34,13 +34,9 @@ func invokeDirect(pyObj *C.PyObject, name string, args []data.Value,
 			}
 		}()
 
-		runtime.LockOSThread()
-		state := GILState_Ensure()
-		defer GILState_Release(state)
-
 		ret, err := callMethod(pyObj, name, args, kwdArgs)
 		ch <- &Result{ret, err}
-	}()
+	})
 	res := <-ch
 
 	return res.val, res.err
@@ -54,17 +50,13 @@ func invoke(pyObj *C.PyObject, name string, args []data.Value, kwdArgs data.Map)
 		err error
 	}
 	ch := make(chan *Result, 1)
-	go func() {
+	mainthread.Exec(func() {
 		defer func() {
 			if r := recover(); r != nil {
 				ch <- &Result{data.Null{}, fmt.Errorf(
 					"cannot call '%v' due to panic: %v", name, r)}
 			}
 		}()
-
-		runtime.LockOSThread()
-		state := GILState_Ensure()
-		defer GILState_Release(state)
 
 		ret, err := callMethod(pyObj, name, args, kwdArgs)
 		if err != nil {
@@ -75,7 +67,7 @@ func invoke(pyObj *C.PyObject, name string, args []data.Value, kwdArgs data.Map)
 
 		po, err := fromPyTypeObject(ret.p)
 		ch <- &Result{po, err}
-	}()
+	})
 	res := <-ch
 
 	return res.val, res.err
