@@ -23,23 +23,15 @@ PyObject* GetPyDateTime(int year, int month, int day, int hour, int minute,
 */
 import "C"
 import (
-	"runtime"
+	"pfi/sensorbee/py/mainthread"
 	"time"
 )
 
 func init() {
 	// Lock Native thread for initializing python
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-
-	// PyDateTime_IMPORT requires initialized python interpreter and GIL.
-	releaseGIL, err := initAndLockPython()
-	if err != nil {
-		panic(err)
-	}
-	defer releaseGIL()
-
-	C.init_PyDateTime()
+	mainthread.ExecSync(func() {
+		C.init_PyDateTime()
+	})
 }
 
 // IsPyTypeDateTime checks the object is `PyDateTime` type or not.

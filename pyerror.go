@@ -22,44 +22,47 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"runtime"
+	"pfi/sensorbee/py/mainthread"
 	"strings"
 	"unicode"
 	"unsafe"
 )
 
 func init() {
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
+	ch := make(chan error)
+	mainthread.Exec(func() {
+		traceback, err := loadModule("traceback")
+		if err != nil {
+			ch <- err
+			return
+		}
+		defer traceback.decRef()
+		if formatException, err := getPyFunc(traceback.p, "format_exception"); err != nil {
+			ch <- err
+			return
+		} else {
+			tracebackFormatExceptionFunc = formatException
+		}
 
-	releaseGIL, err := initAndLockPython()
-	if err != nil {
-		panic(err)
-	}
-	defer releaseGIL()
+		exceptions, err := loadModule("exceptions")
+		if err != nil {
+			ch <- err
+			return
+		}
+		defer exceptions.decRef()
+		syntaxErrorCString := C.CString("SyntaxError")
+		defer C.free(unsafe.Pointer(syntaxErrorCString))
+		if syntaxError := C.PyObject_GetAttrString(exceptions.p, syntaxErrorCString); syntaxError == nil {
+			ch <- errors.New("cannot load exceptions.SyntaxError")
+			return
+		} else {
+			syntaxErrorType.p = syntaxError
+		}
+		ch <- nil
+	})
 
-	traceback, err := loadModule("traceback")
-	if err != nil {
+	if err := <-ch; err != nil {
 		panic(err)
-	}
-	defer traceback.decRef()
-	if formatException, err := getPyFunc(traceback.p, "format_exception"); err != nil {
-		panic(err)
-	} else {
-		tracebackFormatExceptionFunc = formatException
-	}
-
-	exceptions, err := loadModule("exceptions")
-	if err != nil {
-		panic(err)
-	}
-	defer exceptions.decRef()
-	syntaxErrorCString := C.CString("SyntaxError")
-	defer C.free(unsafe.Pointer(syntaxErrorCString))
-	if syntaxError := C.PyObject_GetAttrString(exceptions.p, syntaxErrorCString); syntaxError == nil {
-		panic("cannot load exceptions.SyntaxError")
-	} else {
-		syntaxErrorType.p = syntaxError
 	}
 }
 

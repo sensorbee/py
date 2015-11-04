@@ -6,8 +6,8 @@ package py
 import "C"
 import (
 	"fmt"
+	"pfi/sensorbee/py/mainthread"
 	"pfi/sensorbee/sensorbee/data"
-	"runtime"
 	"unsafe"
 )
 
@@ -27,11 +27,7 @@ func LoadModule(name string) (ObjectModule, error) {
 		err error
 	}
 	ch := make(chan *Result, 1)
-	go func() {
-		runtime.LockOSThread()
-		state := GILState_Ensure()
-		defer GILState_Release(state)
-
+	mainthread.Exec(func() {
 		pyMdl := C.PyImport_ImportModule(cModule)
 		if pyMdl == nil {
 			ch <- &Result{ObjectModule{}, fmt.Errorf(
@@ -40,7 +36,7 @@ func LoadModule(name string) (ObjectModule, error) {
 		}
 
 		ch <- &Result{ObjectModule{Object{p: pyMdl}}, nil}
-	}()
+	})
 	res := <-ch
 
 	return res.val, res.err
@@ -95,11 +91,7 @@ func (m *ObjectModule) GetClass(name string) (ObjectInstance, error) {
 		err error
 	}
 	ch := make(chan *Result, 1)
-	go func() {
-		runtime.LockOSThread()
-		state := GILState_Ensure()
-		defer GILState_Release(state)
-
+	mainthread.Exec(func() {
 		pyInstance := C.PyObject_GetAttrString(m.p, cName)
 		if pyInstance == nil {
 			ch <- &Result{ObjectInstance{}, fmt.Errorf(
@@ -107,7 +99,7 @@ func (m *ObjectModule) GetClass(name string) (ObjectInstance, error) {
 			return
 		}
 		ch <- &Result{ObjectInstance{Object{p: pyInstance}}, nil}
-	}()
+	})
 	res := <-ch
 
 	return res.val, res.err
