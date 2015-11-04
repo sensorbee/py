@@ -105,11 +105,11 @@ func callMethod(pyObj *C.PyObject, name string, args []data.Value,
 	if len(kwdArgs) == 0 {
 		ret, err = pyFunc.callObject(pyArg)
 	} else {
-		pyKwdArg, err := newPyObj(kwdArgs)
-		if err != nil {
+		pyKwdArg, localErr := newPyObj(kwdArgs)
+		if localErr != nil {
 			return Object{}, fmt.Errorf(
 				"fail to convert named arguments in calling '%v' function: %v",
-				name, err.Error())
+				name, localErr.Error())
 		}
 		ret, err = pyFunc.callObjectWithKwd(pyKwdArg, pyArg)
 	}
