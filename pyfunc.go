@@ -121,7 +121,6 @@ func callMethod(pyObj *C.PyObject, name string, args []data.Value,
 	return ret, nil
 }
 
-// TODO should be placed at internal package
 func getPyFunc(pyObj *C.PyObject, name string) (ObjectFunc, error) {
 	cFunc := C.CString(name)
 	defer C.free(unsafe.Pointer(cFunc))
