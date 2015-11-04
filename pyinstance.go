@@ -21,6 +21,9 @@ type ObjectInstance struct {
 //  return type:   data.Value
 func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 	error) {
+	if ins.p == nil {
+		return nil, fmt.Errorf("ins.p of %p is nil while calling %s", ins, name)
+	}
 	return invoke(ins.p, name, args, nil)
 }
 
