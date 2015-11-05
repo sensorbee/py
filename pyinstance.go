@@ -37,7 +37,7 @@ func (ins *ObjectInstance) CallDirect(name string, args []data.Value,
 	}
 	ch := make(chan *Result)
 	mainthread.Exec(func() {
-		v, err := callMethod(ins.p, name, args, kwdArg)
+		v, err := invokeDirect(ins.p, name, args, kwdArg)
 		ch <- &Result{v, err}
 	})
 	res := <-ch
