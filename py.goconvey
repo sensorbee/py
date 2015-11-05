@@ -1,1 +1,1 @@
--coverpkg=pfi/sensorbee/py/mainthread
+-coverpkg=pfi/sensorbee/py,pfi/sensorbee/py/mainthread
