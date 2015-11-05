@@ -34,13 +34,13 @@ func init() {
 	})
 }
 
-// IsPyTypeDateTime checks the object is `PyDateTime` type or not.
-func IsPyTypeDateTime(o *C.PyObject) bool {
+// isPyTypeDateTime checks the object is `PyDateTime` type or not.
+func isPyTypeDateTime(o *C.PyObject) bool {
 	return C.IsPyTypeDateTime(o) > 0
 }
 
-// IsPyTypeTimeDelta checks the object is `PyDelta` type or not.
-func IsPyTypeTimeDelta(o *C.PyObject) bool {
+// isPyTypeTimeDelta checks the object is `PyDelta` type or not.
+func isPyTypeTimeDelta(o *C.PyObject) bool {
 	return C.IsPyTypeTimeDelta(o) > 0
 }
 

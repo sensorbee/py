@@ -26,7 +26,7 @@ func LoadModule(name string) (ObjectModule, error) {
 		val ObjectModule
 		err error
 	}
-	ch := make(chan *Result, 1)
+	ch := make(chan *Result)
 	mainthread.Exec(func() {
 		pyMdl := C.PyImport_ImportModule(cModule)
 		if pyMdl == nil {
@@ -77,7 +77,17 @@ func LoadModule(name string) (ObjectModule, error) {
 // and `self.c` will be set `{}`
 func (m *ObjectModule) NewInstance(name string, args []data.Value, kwdArgs data.Map) (
 	ObjectInstance, error) {
-	return newInstance(m, name, args, kwdArgs)
+	type Result struct {
+		val ObjectInstance
+		err error
+	}
+	ch := make(chan *Result)
+	mainthread.Exec(func() {
+		r, err := newInstance(m, name, args, kwdArgs)
+		ch <- &Result{r, err}
+	})
+	res := <-ch
+	return res.val, res.err
 }
 
 // GetClass returns `name` class instance.
@@ -90,7 +100,7 @@ func (m *ObjectModule) GetClass(name string) (ObjectInstance, error) {
 		val ObjectInstance
 		err error
 	}
-	ch := make(chan *Result, 1)
+	ch := make(chan *Result)
 	mainthread.Exec(func() {
 		pyInstance := C.PyObject_GetAttrString(m.p, cName)
 		if pyInstance == nil {
@@ -108,5 +118,15 @@ func (m *ObjectModule) GetClass(name string) (ObjectInstance, error) {
 // Call calls `name` function. This function is supported for module method of
 // python.
 func (m *ObjectModule) Call(name string, args ...data.Value) (data.Value, error) {
-	return invoke(m.p, name, args, nil)
+	type Result struct {
+		val data.Value
+		err error
+	}
+	ch := make(chan *Result)
+	mainthread.Exec(func() {
+		v, err := invoke(m.p, name, args, nil)
+		ch <- &Result{v, err}
+	})
+	res := <-ch
+	return res.val, res.err
 }

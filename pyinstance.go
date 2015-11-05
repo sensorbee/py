@@ -31,70 +31,62 @@ func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 // returned.
 func (ins *ObjectInstance) CallDirect(name string, args []data.Value,
 	kwdArg data.Map) (Object, error) {
-	return invokeDirect(ins.p, name, args, kwdArg)
+	type Result struct {
+		val Object
+		err error
+	}
+	ch := make(chan *Result)
+	mainthread.Exec(func() {
+		v, err := callMethod(ins.p, name, args, kwdArg)
+		ch <- &Result{v, err}
+	})
+	res := <-ch
+	return res.val, res.err
 }
 
 func newInstance(m *ObjectModule, name string, args []data.Value, kwdArgs data.Map) (
-	ObjectInstance, error) {
+	result ObjectInstance, resErr error) {
 
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
-	type Result struct {
-		val ObjectInstance
-		err error
+	defer func() {
+		if r := recover(); r != nil {
+			resErr = fmt.Errorf("cannot call '%v' due to panic: %v", name, r)
+		}
+	}()
+
+	pyInstance := C.PyObject_GetAttrString(m.p, cName)
+	if pyInstance == nil {
+		return ObjectInstance{}, fmt.Errorf("fail to get '%v' class: %v", name, getPyErr())
 	}
-	ch := make(chan *Result, 1)
-	mainthread.Exec(func() {
-		defer func() {
-			if r := recover(); r != nil {
-				ch <- &Result{ObjectInstance{}, fmt.Errorf(
-					"cannot call '%v' due to panic: %v", name, r)}
-			}
-		}()
+	defer C.Py_DecRef(pyInstance)
 
-		pyInstance := C.PyObject_GetAttrString(m.p, cName)
-		if pyInstance == nil {
-			ch <- &Result{ObjectInstance{}, fmt.Errorf(
-				"fail to get '%v' class: %v", name, getPyErr())}
-			return
-		}
-		defer C.Py_DecRef(pyInstance)
+	// no named arguments
+	pyArg, err := convertArgsGo2Py(args)
+	if err != nil {
+		return ObjectInstance{}, fmt.Errorf("fail to convert non named arguments in creating '%v' instance: %v",
+			name, err.Error())
+	}
+	defer pyArg.decRef()
 
-		// no named arguments
-		pyArg, err := convertArgsGo2Py(args)
+	// named arguments
+	var pyKwdArg *C.PyObject
+	if len(kwdArgs) == 0 {
+		pyKwdArg = nil
+	} else {
+		o, err := newPyObj(kwdArgs)
 		if err != nil {
-			ch <- &Result{ObjectInstance{}, fmt.Errorf(
-				"fail to convert non named arguments in creating '%v' instance: %v",
-				name, err.Error())}
-			return
+			return ObjectInstance{}, fmt.Errorf("fail to convert named arguments in creating '%v' instance: %v",
+				name, err.Error())
 		}
-		defer pyArg.decRef()
+		pyKwdArg = o.p
+	}
 
-		// named arguments
-		var pyKwdArg *C.PyObject
-		if len(kwdArgs) == 0 {
-			pyKwdArg = nil
-		} else {
-			o, err := newPyObj(kwdArgs)
-			if err != nil {
-				ch <- &Result{ObjectInstance{}, fmt.Errorf(
-					"fail to convert named arguments in creating '%v' instance: %v",
-					name, err.Error())}
-				return
-			}
-			pyKwdArg = o.p
-		}
+	ret := C.PyObject_Call(pyInstance, pyArg.p, pyKwdArg)
+	if ret == nil {
+		return ObjectInstance{}, fmt.Errorf("fail to create '%v' instance: %v", name, getPyErr())
+	}
 
-		ret := C.PyObject_Call(pyInstance, pyArg.p, pyKwdArg)
-		if ret == nil {
-			ch <- &Result{ObjectInstance{}, fmt.Errorf(
-				"fail to create '%v' instance: %v", name, getPyErr())}
-			return
-		}
-		ch <- &Result{ObjectInstance{Object{p: ret}}, nil}
-	})
-	res := <-ch
-
-	return res.val, res.err
+	return ObjectInstance{Object{p: ret}}, nil
 }
