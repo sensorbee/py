@@ -20,10 +20,21 @@ type ObjectInstance struct {
 // [TODO] this function is not supported named arguments
 func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 	error) {
-	if ins.p == nil {
-		return nil, fmt.Errorf("ins.p of %p is nil while calling %s", ins, name)
+	type Result struct {
+		val data.Value
+		err error
 	}
-	return invoke(ins.p, name, args, nil)
+	ch := make(chan *Result)
+	mainthread.Exec(func() {
+		if ins.p == nil {
+			ch <- &Result{nil, fmt.Errorf("ins.p of %p is nil while calling %s", ins, name)}
+			return
+		}
+		v, err := invoke(ins.p, name, args, nil)
+		ch <- &Result{v, err}
+	})
+	res := <-ch
+	return res.val, res.err
 }
 
 // CallDirect calls `name` function and return `PyObject` directly.

@@ -1,5 +1,10 @@
 package mainthread
 
+/*
+#include "Python.h"
+*/
+import "C"
+
 var (
 	jobs = make(chan func())
 )
@@ -40,9 +45,18 @@ func ExecSync(f func()) {
 }
 
 func process() {
+	state := C.PyEval_SaveThread()
+	defer func() {
+		C.PyEval_RestoreThread(state)
+	}()
+
 	for f := range jobs {
 		func() {
-			defer recover()
+			C.PyEval_RestoreThread(state)
+			defer func() {
+				recover() // TODO: provide logging hook to report incidents
+				state = C.PyEval_SaveThread()
+			}()
 			f()
 		}()
 	}
