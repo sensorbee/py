@@ -139,7 +139,7 @@ func newPyInstance(createMethodName string, baseParams *BaseParams,
 	}
 	defer class.DecRef()
 
-	ins, err := class.CallDirect(createMethodName, nil, kwdArgs)
+	ins, err := class.CallDirect(createMethodName, args, kwdArgs)
 	return py.ObjectInstance{ins}, err
 }
 
