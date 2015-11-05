@@ -61,14 +61,14 @@ func TestPyFunc(t *testing.T) {
 		Reset(func() {
 			obj.DecRef()
 		})
-		negator := ObjectFunc{obj.Object}
+		negator := ObjectFunc{obj.Object, "negator"}
 
 		alwaysFailObj, err := mdl.NewInstance("alwaysFail", nil, nil)
 		So(err, ShouldBeNil)
 		Reset(func() {
 			alwaysFailObj.DecRef()
 		})
-		alwaysFail := ObjectFunc{alwaysFailObj.Object}
+		alwaysFail := ObjectFunc{alwaysFailObj.Object, "alwaysFail"}
 
 		Convey("When calling a function object properly", func() {
 			arg, err := safePythonCall(func() (Object, error) {

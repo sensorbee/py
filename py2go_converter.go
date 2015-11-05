@@ -77,7 +77,7 @@ func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 		charPtr := C.PyString_AsString(o)
 		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size))), nil
 
-	case IsPyTypeDateTime(o):
+	case isPyTypeDateTime(o):
 		return fromTimestamp(o), nil
 
 	case C.IsPyTypeList(o) > 0:
@@ -183,7 +183,7 @@ func fromTimestampWithTimezone(o *C.PyObject, t time.Time) data.Timestamp {
 		return data.Timestamp(t)
 	}
 
-	if !IsPyTypeTimeDelta(ret.p) {
+	if !isPyTypeTimeDelta(ret.p) {
 		// Cannot get `datetime.timedelta` instance
 		return data.Timestamp(t)
 	}
