@@ -214,15 +214,19 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 		mdl, err := LoadModule("_test_new_instance")
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
+		Reset(func() {
+			mdl.DecRef()
+		})
 
 		Convey("When get a new test python instance with empty map", func() {
 			ins, err := mdl.NewInstance("PythonTest", nil, data.Map{})
+			Reset(func() {
+				ins.DecRef()
+			})
+
 			Convey("Then process should get a python instance from the module", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
-				Reset(func() {
-					ins.DecRef()
-				})
 			})
 		})
 
@@ -234,13 +238,13 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 				"d": data.Int(4),
 			}
 			ins, err := mdl.NewInstance("PythonTestForKwd", nil, arg)
+			Reset(func() {
+				ins.DecRef()
+			})
 
 			Convey("Then process should get instance and set values", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
-				Reset(func() {
-					ins.DecRef()
-				})
 
 				actual, err := ins.Call("confirm_init")
 				So(err, ShouldBeNil)
@@ -253,13 +257,13 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 				"a": data.Int(1),
 			}
 			ins, err := mdl.NewInstance("PythonTestForKwd", nil, arg)
+			Reset(func() {
+				ins.DecRef()
+			})
 
 			Convey("Then process should get instance and set values", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
-				Reset(func() {
-					ins.DecRef()
-				})
 
 				actual, err := ins.Call("confirm_init")
 				So(err, ShouldBeNil)
@@ -273,13 +277,13 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 				"v1": data.String("homhom"),
 			}
 			ins, err := mdl.NewInstance("PythonTestForKwd", []data.Value{arg}, kwdArg)
+			Reset(func() {
+				ins.DecRef()
+			})
 
 			Convey("Then process should get instance and set values", func() {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
-				Reset(func() {
-					ins.DecRef()
-				})
 
 				actual, err := ins.Call("confirm_init")
 				So(err, ShouldBeNil)
