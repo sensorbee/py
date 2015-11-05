@@ -2,9 +2,6 @@ package py
 
 /*
 #include "Python.h"
-void XDecRef(PyObject *o) {
-  Py_XDECREF(o);
-}
 */
 import "C"
 import (
@@ -22,7 +19,12 @@ type Object struct {
 // A user can safely call this method even when its target object is null.
 func (o *Object) DecRef() {
 	mainthread.ExecSync(func() { // TODO: This Exec should probably be removed.
-		C.XDecRef(o.p)
+		// Py_XDECREF is not used here because it causes SEGV on Windows.
+		if o.p == nil {
+			return
+		}
+		C.Py_DecRef(o.p)
+		o.p = nil
 	})
 }
 
