@@ -26,7 +26,7 @@ func AppendSysPath(path string) error {
 		cSysPath := C.CString(sysPath)
 		defer C.free(unsafe.Pointer(cSysPath))
 		if result := C.PyRun_SimpleStringFlags(cSysPath, nil); result != 0 {
-			ch <- fmt.Errorf("fail to load '%v' module", path)
+			ch <- fmt.Errorf("fail to append '%v' path", path)
 			return
 		}
 		ch <- nil
@@ -41,7 +41,7 @@ func AppendSysPathNoGIL(path string) error {
 	cSysPath := C.CString(sysPath)
 	defer C.free(unsafe.Pointer(cSysPath))
 	if result := C.PyRun_SimpleStringFlags(cSysPath, nil); result != 0 {
-		return fmt.Errorf("fail to load '%v' module", path)
+		return fmt.Errorf("fail to append '%v' path", path)
 	}
 
 	return nil
