@@ -54,10 +54,11 @@ func init() {
 			C.PyEval_ReleaseThread(C.PyGILState_GetThisThreadState())
 		}()
 
-		ch <- nil
 		if err := importSys(); err != nil {
 			ch <- err
+			return
 		}
+		ch <- nil
 		process()
 	}()
 
