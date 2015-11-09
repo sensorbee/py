@@ -55,6 +55,9 @@ func init() {
 		}()
 
 		ch <- nil
+		if err := importSys(); err != nil {
+			ch <- err
+		}
 		process()
 	}()
 

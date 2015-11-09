@@ -9,36 +9,43 @@ import (
 	"unsafe"
 )
 
+func importSys() error {
+	importSys := C.CString("import sys")
+	defer C.free(unsafe.Pointer(importSys))
+	if result := C.PyRun_SimpleStringFlags(importSys, nil); result != 0 {
+		return fmt.Errorf(`fail to import "sys" package`)
+	}
+	return nil
+}
+
 // AppendSysPath sets `sys.path` to load modules.
 func AppendSysPath(paths ...string) error {
+	ch := make(chan error)
 	Exec(func() { // TODO: This Exec should probably be provided out side this function.
-		// TODO: All import errors must be detected
-		importSys := C.CString("import sys")
-		defer C.free(unsafe.Pointer(importSys))
-		C.PyRun_SimpleStringFlags(importSys, nil)
-
 		for _, path := range paths {
 			sysPath := fmt.Sprintf("sys.path.append('%v')", path)
 			cSysPath := C.CString(sysPath)
 			defer C.free(unsafe.Pointer(cSysPath))
-			C.PyRun_SimpleStringFlags(cSysPath, nil)
+			if result := C.PyRun_SimpleStringFlags(cSysPath, nil); result != 0 {
+				ch <- fmt.Errorf("fail to load '%v' module", path)
+				return
+			}
 		}
+		ch <- nil
 	})
-	return nil
+	err := <-ch
+	return err
 }
 
 // AppendSysPathNoGIL sets `sys.path` to load modules.
 func AppendSysPathNoGIL(paths ...string) error {
-	// TODO: All import errors must be detected
-	importSys := C.CString("import sys")
-	defer C.free(unsafe.Pointer(importSys))
-	C.PyRun_SimpleStringFlags(importSys, nil)
-
 	for _, path := range paths {
 		sysPath := fmt.Sprintf("sys.path.append('%v')", path)
 		cSysPath := C.CString(sysPath)
 		defer C.free(unsafe.Pointer(cSysPath))
-		C.PyRun_SimpleStringFlags(cSysPath, nil)
+		if result := C.PyRun_SimpleStringFlags(cSysPath, nil); result != 0 {
+			return fmt.Errorf("fail to load '%v' module", path)
+		}
 	}
 	return nil
 }
