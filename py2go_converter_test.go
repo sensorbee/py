@@ -3,6 +3,7 @@ package py
 import (
 	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
+	"pfi/sensorbee/py/mainthread"
 	"pfi/sensorbee/sensorbee/data"
 	"testing"
 	"time"
@@ -10,7 +11,7 @@ import (
 
 func TestConvertPyObject2Go(t *testing.T) {
 	Convey("Given an initialized python py2go test module", t, func() {
-		ImportSysAndAppendPath("")
+		mainthread.AppendSysPath("")
 
 		mdl, err := LoadModule("_test_py2go")
 		So(err, ShouldBeNil)

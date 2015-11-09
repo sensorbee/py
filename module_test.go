@@ -2,13 +2,14 @@ package py
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
+	"pfi/sensorbee/py/mainthread"
 	"pfi/sensorbee/sensorbee/data"
 	"testing"
 )
 
 func TestLoadModuleError(t *testing.T) {
 	Convey("Given a python interpreter set up default import path", t, func() {
-		ImportSysAndAppendPath("")
+		mainthread.AppendSysPath("")
 
 		Convey("When get module with not exist module name", func() {
 			_, err := LoadModule("not_exist_module")
@@ -31,7 +32,7 @@ func TestLoadModuleError(t *testing.T) {
 func TestNewInstanceAndStateness(t *testing.T) {
 	Convey("Given an initialized python module", t, func() {
 
-		ImportSysAndAppendPath("")
+		mainthread.AppendSysPath("")
 
 		mdl, err := LoadModule("_test_new_instance")
 		So(err, ShouldBeNil)
@@ -209,7 +210,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 func TestNewInstanceWithKeywordArgument(t *testing.T) {
 	Convey("Given an initialized python module", t, func() {
 
-		ImportSysAndAppendPath("")
+		mainthread.AppendSysPath("")
 
 		mdl, err := LoadModule("_test_new_instance")
 		So(err, ShouldBeNil)
