@@ -1,5 +1,5 @@
 /*
-mainthread package initializes Python interpreter and lock the goroutine to a
+Package mainthread initializes Python interpreter and lock the goroutine to a
 specific OS thread so that the interpreter can keep using the same OS thread
 as a main thread. It also provides Exec function to run any function on the
 main thread.
