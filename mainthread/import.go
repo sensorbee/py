@@ -21,7 +21,7 @@ func importSys() error {
 // AppendSysPath sets `sys.path` to load modules.
 func AppendSysPath(path string) error {
 	ch := make(chan error)
-	Exec(func() { // TODO: This Exec should probably be provided out side this function.
+	Exec(func() {
 		sysPath := fmt.Sprintf("sys.path.append('%v')", path)
 		cSysPath := C.CString(sysPath)
 		defer C.free(unsafe.Pointer(cSysPath))
