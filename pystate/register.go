@@ -3,6 +3,7 @@ package pystate
 import (
 	"fmt"
 	"pfi/sensorbee/py"
+	"pfi/sensorbee/py/mainthread"
 	"pfi/sensorbee/sensorbee/bql/udf"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
@@ -49,7 +50,7 @@ func (f *defaultFunc) Func(ctx *core.Context, args ...data.Value) (data.Value,
 // MustRegisterPyUDF is like MustRegisterGlobalUDF for Python module method.
 func MustRegisterPyUDF(udfName string, modulePath string, moduleName string,
 	funcName string) {
-	py.ImportSysAndAppendPath(modulePath)
+	mainthread.AppendSysPath(modulePath)
 	mdl, err := py.LoadModule(moduleName)
 	if err != nil {
 		panic(fmt.Errorf("py.MustRegisterPyUDF: cannot register '%v': %v",

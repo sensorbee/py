@@ -9,7 +9,7 @@ import (
 
 func TestGetPyFuncError(t *testing.T) {
 	Convey("Given an initialized pyfunc test module", t, func() {
-		ImportSysAndAppendPath("")
+		mainthread.AppendSysPath("")
 
 		mdl, err := LoadModule("_test_pyfunc")
 		So(err, ShouldBeNil)
@@ -50,7 +50,7 @@ func TestGetPyFuncError(t *testing.T) {
 
 func TestPyFunc(t *testing.T) {
 	Convey("Given an initialized pyfunc test module", t, func() {
-		ImportSysAndAppendPath("")
+		mainthread.AppendSysPath("")
 
 		mdl, err := LoadModule("_test_pyfunc")
 		So(err, ShouldBeNil)

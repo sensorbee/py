@@ -17,7 +17,7 @@ type ObjectModule struct {
 }
 
 // LoadModule loads `name` module. The module needs to be placed at `sys.path`.
-// User can set optional `sys.path` using `ImportSysAndAppendPath`
+// User can set optional `sys.path` using `mainthread.AppendSysPath`
 func LoadModule(name string) (ObjectModule, error) {
 	cModule := C.CString(name)
 	defer C.free(unsafe.Pointer(cModule))

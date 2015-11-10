@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"pfi/sensorbee/py"
+	"pfi/sensorbee/py/mainthread"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
 )
@@ -125,7 +126,7 @@ func NewBase(baseParams *BaseParams, params data.Map) (*Base, error) {
 func newPyInstance(createMethodName string, baseParams *BaseParams,
 	args []data.Value, kwdArgs data.Map) (py.ObjectInstance, error) {
 	var null py.ObjectInstance
-	py.ImportSysAndAppendPath(baseParams.ModulePath)
+	mainthread.AppendSysPath(baseParams.ModulePath)
 
 	mdl, err := py.LoadModule(baseParams.ModuleName)
 	if err != nil {
