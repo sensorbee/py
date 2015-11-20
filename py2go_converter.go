@@ -43,6 +43,10 @@ int IsPyTypeTuple(PyObject *o) {
 int IsPyTypeNone(PyObject *o) {
   return o == Py_None;
 }
+
+int IsPyTypeUnicode(PyObject *o) {
+  return PyUnicode_CheckExact(o);
+}
 */
 import "C"
 import (
@@ -76,6 +80,21 @@ func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 		size := C.int(C.PyString_Size(o))
 		charPtr := C.PyString_AsString(o)
 		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size))), nil
+
+	case C.IsPyTypeUnicode(o) > 0:
+		// Use unicode string as UTF-8 in py because
+		// Go's source code is defined to be UTF-8 text and string literal is too.
+		utf8 := C.CString("UTF-8")
+		defer C.free(unsafe.Pointer(utf8))
+
+		strObj := C.PyUnicode_AsEncodedString(o, utf8, nil)
+		if strObj == nil {
+			return data.Null{}, getPyErr()
+		}
+		str := Object{p: strObj}
+		defer str.decRef()
+
+		return fromPyTypeObject(str.p)
 
 	case isPyTypeDateTime(o):
 		return fromTimestamp(o), nil
@@ -118,8 +137,8 @@ func fromPyMap(o *C.PyObject) (data.Map, error) {
 	pos := C.Py_ssize_t(C.int(0))
 
 	for C.int(C.PyDict_Next(o, &pos, &key, &value)) > 0 {
-		// data.Map's key is only allowed string
-		if key.ob_type != &C.PyString_Type {
+		// data.Map's key is only allowed string or unicode
+		if C.IsPyTypeString(key) == 0 && C.IsPyTypeUnicode(key) == 0 {
 			continue
 		}
 		k, _ := fromPyTypeObject(key)
