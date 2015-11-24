@@ -26,6 +26,7 @@ func TestConvertPyObject2Go(t *testing.T) {
 			{"int", data.Int(123)},
 			{"float", data.Float(1.0)},
 			{"string", data.String("ABC")},
+			{"unicode", data.String("hello")},
 			{"bytearray", data.Blob([]byte("abcdefg"))},
 			{"map", data.Map{"key1": data.Int(123), "key2": data.String("str")}},
 			{"nested_map", data.Map{"key1": data.Map{"key2": data.Int(123)}}},

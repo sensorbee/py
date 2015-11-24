@@ -22,6 +22,10 @@ def return_string():
     return "ABC"
 
 
+def return_unicode():
+    return u"hello"
+
+
 def return_bytearray():
     return bytearray('abcdefg')
 
@@ -31,7 +35,7 @@ def return_array():
 
 
 def return_map():
-    return {"key1": 123, "key2": "str"}
+    return {"key1": 123, u"key2": "str"}
 
 
 def return_nested_map():
