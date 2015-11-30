@@ -161,7 +161,10 @@ func newPyInstance(createMethodName string, baseParams *BaseParams,
 }
 
 // LoadBase loads a new Base state.
-func LoadBase(ctx *core.Context, r io.Reader, baseParams *BaseLoadParams, params data.Map) (*Base, error) {
+func LoadBase(ctx *core.Context, r io.Reader, params data.Map) (*Base, error) {
+	// TODO: copy params to anoter map
+	// TODO: parse BaseLoadParams
+
 	s := &Base{}
 	if err := s.load(ctx, r, params); err != nil {
 		return nil, err
