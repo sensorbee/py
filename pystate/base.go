@@ -41,6 +41,13 @@ type BaseParams struct {
 	WriteMethodName string `codec:"write_method"`
 }
 
+// BaseLoadParams has parameters for Base given in SET clause of LOAD STATE
+// statement.
+type BaseLoadParams struct {
+	// TODO: support some parameters in BaseParams to overwrite ones which
+	// have to be customized for each running environment.
+}
+
 var (
 	modulePath      = data.MustCompilePath("module_path")
 	moduleNamePath  = data.MustCompilePath("module_name")
@@ -48,7 +55,7 @@ var (
 	writeMethodPath = data.MustCompilePath("write_method")
 )
 
-// ExtractBaseParams extract parameters for Base from parameters given in
+// ExtractBaseParams extracts parameters for Base from parameters given in
 // a WITH clause of a CREATE STATE statement. If removeBaseKeys is true,
 // this function removes base parameters from params and only other parameters
 // remain in the map when this function succeeds. If this function fails,
@@ -93,6 +100,15 @@ func ExtractBaseParams(params data.Map, removeBaseKeys bool) (*BaseParams, error
 		}
 	}
 	return bp, nil
+}
+
+// ExtractBaseLoadParams extracts parameters for Base from parameters given in
+// a SET clause of LOAD STATE statement. If removeBaseKeys is true, this
+// function removes base parameters from params and only other parameters
+// remain in the map when this function succeeds. If this function fails,
+// all parameters including base parameters remain in the map.
+func ExtractBaseLoadParams(params data.Map, removeBaseKeys bool) (*BaseLoadParams, error) {
+	return &BaseLoadParams{}, nil
 }
 
 // Base is a wrapper of a UDS written in Python. It has common implementations
@@ -142,6 +158,15 @@ func newPyInstance(createMethodName string, baseParams *BaseParams,
 
 	ins, err := class.CallDirect(createMethodName, args, kwdArgs)
 	return py.ObjectInstance{ins}, err
+}
+
+// LoadBase loads a new Base state.
+func LoadBase(ctx *core.Context, r io.Reader, baseParams *BaseLoadParams, params data.Map) (*Base, error) {
+	s := &Base{}
+	if err := s.load(ctx, r, params); err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func (s *Base) set(ins py.ObjectInstance, baseParams *BaseParams) {
@@ -298,12 +323,16 @@ func (s *Base) Load(ctx *core.Context, r io.Reader, params data.Map) error {
 	if s.ins == nil {
 		return ErrAlreadyTerminated
 	}
+	return s.load(ctx, r, params)
+}
 
+func (s *Base) load(ctx *core.Context, r io.Reader, params data.Map) error {
 	var formatVersion uint8
 	if err := binary.Read(r, binary.LittleEndian, &formatVersion); err != nil {
 		return err
 	}
 
+	// TODO: support BaseLoadParams
 	// TODO: remove PyStateState specific parameters from params
 
 	switch formatVersion {

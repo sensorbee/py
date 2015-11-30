@@ -1,6 +1,7 @@
 package pystate
 
 import (
+	"bytes"
 	. "github.com/smartystreets/goconvey/convey"
 	"pfi/sensorbee/sensorbee/core"
 	"pfi/sensorbee/sensorbee/data"
@@ -144,6 +145,75 @@ func TestCreateState(t *testing.T) {
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldContainSubstring, "class_name")
 				So(state, ShouldBeNil)
+			})
+		})
+	})
+}
+
+func TestSaveLoadState(t *testing.T) {
+	params := data.Map{
+		"a": data.Int(1),
+		"b": data.String("hoge"),
+	}
+
+	Convey("Given a saved state", t, func() {
+		ctx := core.NewContext(nil)
+		c := Creator{}
+		state, err := c.CreateState(ctx, data.Map{
+			"module_name": data.String("_test_creator_module"),
+			"class_name":  data.String("TestClass4"),
+			"a":           params["a"],
+			"b":           params["b"],
+		})
+		So(err, ShouldBeNil)
+		Reset(func() {
+			state.Terminate(ctx)
+		})
+		So(ctx.SharedStates.Add("creator_test4", "py", state), ShouldBeNil)
+		s := state.(core.LoadableSharedState)
+		buf := bytes.NewBuffer(nil)
+		So(s.Save(ctx, buf, params), ShouldBeNil)
+
+		Convey("When modifying parameters", func() {
+			_, err := CallMethod(ctx, "creator_test4", "modify_params")
+			So(err, ShouldBeNil)
+
+			Convey("Then they should be different from the originals", func() {
+				p, err := CallMethod(ctx, "creator_test4", "confirm")
+				So(err, ShouldBeNil)
+				So(p, ShouldNotResemble, params)
+			})
+		})
+
+		Convey("When loading the state", func() {
+			_, err := CallMethod(ctx, "creator_test4", "modify_params")
+			So(err, ShouldBeNil)
+			So(s.Load(ctx, buf, data.Map{}), ShouldBeNil)
+
+			Convey("Then it should preserve the original parameters", func() {
+				p, err := CallMethod(ctx, "creator_test4", "confirm")
+				So(err, ShouldBeNil)
+				So(p, ShouldResemble, params)
+			})
+		})
+
+		Convey("When loading the state as a new one", func() {
+			// This parameter modification after Save shouldn't affect the
+			// newly loaded state.
+			_, err := CallMethod(ctx, "creator_test4", "modify_params")
+			So(err, ShouldBeNil)
+
+			s2, err := c.LoadState(ctx, buf, data.Map{})
+			So(err, ShouldBeNil)
+			Reset(func() {
+				s2.Terminate(ctx)
+			})
+			So(ctx.SharedStates.Add("creator_test4_2", "py", s2), ShouldBeNil)
+
+			Convey("Then it should have the same parameter as the original", func() {
+				p, err := CallMethod(ctx, "creator_test4_2", "confirm")
+				So(err, ShouldBeNil)
+				So(p, ShouldResemble, params)
 			})
 		})
 	})

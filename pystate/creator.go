@@ -28,9 +28,17 @@ func (c *Creator) CreateState(ctx *core.Context, params data.Map) (
 // LoadState loads saved state and creates a new instance from it.
 func (c *Creator) LoadState(ctx *core.Context, r io.Reader, params data.Map) (
 	core.SharedState, error) {
-	s := state{}
-	if err := s.Load(ctx, r, params); err != nil {
+	bp, err := ExtractBaseLoadParams(params, true)
+	if err != nil {
 		return nil, err
+	}
+
+	base, err := LoadBase(ctx, r, bp, params)
+	if err != nil {
+		return nil, err
+	}
+	s := state{
+		base: base,
 	}
 
 	if s.base.params.WriteMethodName != "" {
