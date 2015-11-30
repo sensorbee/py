@@ -1,3 +1,5 @@
+import six
+
 class TestClass(object):
 
     @staticmethod
@@ -36,3 +38,27 @@ class TestClass3(object):
     def confirm(self):
         return 'constructor init arg is a={}, b={}, c={}'.format(
             self.a, self.b, self.c)
+
+class TestClass4(object):
+
+    @staticmethod
+    def create(*args, **params):
+        self = TestClass4()
+        self.params = params
+        return self
+
+    @staticmethod
+    def load(filepath, *args, **kwargs):
+        with open(filepath, 'r') as f:
+            return six.moves.cPickle.load(f)
+
+    def modify_params(self):
+        self.params["a"] = 2
+        self.params["b"] = "moge"
+
+    def confirm(self):
+        return self.params
+
+    def save(self, filepath, *args, **kwargs):
+        with open(filepath, 'w') as f:
+            six.moves.cPickle.dump(self, f)
