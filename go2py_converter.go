@@ -94,6 +94,7 @@ func newPyMap(m data.Map) (*C.PyObject, error) {
 			if err != nil {
 				return err
 			}
+			defer C.Py_DecRef(key)
 			defer value.decRef()
 			C.PyDict_SetItem(pydict, key, value.p)
 			return nil

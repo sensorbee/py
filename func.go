@@ -92,6 +92,7 @@ func (f *ObjectFunc) call(args []data.Value, kwdArgs data.Map) (result Object, r
 				"fail to convert named arguments in calling '%v' function: %v",
 				f.name, localErr)
 		}
+		defer pyKwdArg.decRef()
 		ret, err = f.callObjectWithKwd(pyKwdArg, pyArg)
 	}
 
