@@ -91,6 +91,7 @@ func newInstance(m *ObjectModule, name string, args []data.Value, kwdArgs data.M
 			return ObjectInstance{}, fmt.Errorf("fail to convert named arguments in creating '%v' instance: %v",
 				name, err.Error())
 		}
+		defer o.decRef()
 		pyKwdArg = o.p
 	}
 

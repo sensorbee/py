@@ -89,13 +89,14 @@ func newPyMap(m data.Map) (*C.PyObject, error) {
 	}
 	for k, v := range m {
 		err := func() error {
-			key := newPyString(k)
+			ck := C.CString(k)
+			defer C.free(unsafe.Pointer(ck))
 			value, err := newPyObj(v)
 			if err != nil {
 				return err
 			}
 			defer value.decRef()
-			C.PyDict_SetItem(pydict, key, value.p)
+			C.PyDict_SetItemString(pydict, ck, value.p)
 			return nil
 		}()
 		if err != nil {
