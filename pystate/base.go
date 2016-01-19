@@ -271,7 +271,7 @@ func (s *Base) Save(ctx *core.Context, w io.Writer, params data.Map) error {
 			"cannot open the temporary file having the saved data: %v", err)
 	}
 	defer func() {
-		if err := temp.Close(); err != nil {
+		if err := f.Close(); err != nil {
 			ctx.ErrLog(err).WithField("filepath", filepath).Warn(
 				"Cannot close the temporary file")
 		}

@@ -1,5 +1,6 @@
 import six
 
+
 class TestClass(object):
 
     @staticmethod
@@ -38,6 +39,7 @@ class TestClass3(object):
     def confirm(self):
         return 'constructor init arg is a={}, b={}, c={}'.format(
             self.a, self.b, self.c)
+
 
 class TestClass4(object):
 
