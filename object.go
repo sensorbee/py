@@ -13,11 +13,11 @@ type Object struct {
 	p *C.PyObject
 }
 
-// DecRef decrease reference counter of `C.PyObject`
-// This function is public for API users and
-// it acquires GIL of Python interpreter.
-// A user can safely call this method even when its target object is null.
-func (o *Object) DecRef() {
+// Release decreases reference counter of `C.PyObject` and released the object.
+// This function is public for API users and it acquires GIL of Python
+// interpreter. A user can safely call this method even when its target object
+// is null.
+func (o *Object) Release() {
 	mainthread.ExecSync(func() { // TODO: This Exec should probably be removed.
 		// Py_XDECREF is not used here because it causes SEGV on Windows.
 		if o.p == nil {

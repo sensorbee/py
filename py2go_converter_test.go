@@ -51,7 +51,7 @@ func TestConvertPyObject2Go(t *testing.T) {
 		}
 
 		Reset(func() {
-			mdl.DecRef()
+			mdl.Release()
 		})
 	})
 }

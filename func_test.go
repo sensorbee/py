@@ -15,7 +15,7 @@ func TestGetPyFuncError(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 		Reset(func() {
-			mdl.DecRef()
+			mdl.Release()
 		})
 
 		Convey("When func name is not exist", func() {
@@ -59,14 +59,14 @@ func TestPyFunc(t *testing.T) {
 		obj, err := mdl.NewInstance("negator", nil, nil)
 		So(err, ShouldBeNil)
 		Reset(func() {
-			obj.DecRef()
+			obj.Release()
 		})
 		negator := ObjectFunc{obj.Object, "negator"}
 
 		alwaysFailObj, err := mdl.NewInstance("alwaysFail", nil, nil)
 		So(err, ShouldBeNil)
 		Reset(func() {
-			alwaysFailObj.DecRef()
+			alwaysFailObj.Release()
 		})
 		alwaysFail := ObjectFunc{alwaysFailObj.Object, "alwaysFail"}
 
@@ -76,7 +76,7 @@ func TestPyFunc(t *testing.T) {
 			})
 			So(err, ShouldBeNil)
 			Reset(func() {
-				arg.DecRef()
+				arg.Release()
 			})
 
 			ret, err := safePythonCall(func() (Object, error) {
@@ -85,7 +85,7 @@ func TestPyFunc(t *testing.T) {
 			Convey("it should succeed.", func() {
 				So(err, ShouldBeNil)
 				Reset(func() {
-					ret.DecRef()
+					ret.Release()
 				})
 			})
 		})
@@ -96,7 +96,7 @@ func TestPyFunc(t *testing.T) {
 			})
 			So(err, ShouldBeNil)
 			Reset(func() {
-				badArg.DecRef()
+				badArg.Release()
 			})
 
 			ret2, err := safePythonCall(func() (Object, error) {

@@ -138,7 +138,7 @@ func NewBase(baseParams *BaseParams, params data.Map) (*Base, error) {
 }
 
 // newPyInstance creates a new Python class instance.
-// User must call DecRef method to release a resource.
+// User must call Release method to release a resource.
 func newPyInstance(createMethodName string, baseParams *BaseParams,
 	args []data.Value, kwdArgs data.Map) (py.ObjectInstance, error) {
 	var null py.ObjectInstance
@@ -148,13 +148,13 @@ func newPyInstance(createMethodName string, baseParams *BaseParams,
 	if err != nil {
 		return null, err
 	}
-	defer mdl.DecRef()
+	defer mdl.Release()
 
 	class, err := mdl.GetClass(baseParams.ClassName)
 	if err != nil {
 		return null, err
 	}
-	defer class.DecRef()
+	defer class.Release()
 
 	ins, err := class.CallDirect(createMethodName, args, kwdArgs)
 	return py.ObjectInstance{ins}, err
@@ -174,7 +174,7 @@ func LoadBase(ctx *core.Context, r io.Reader, params data.Map) (*Base, error) {
 
 func (s *Base) set(ins py.ObjectInstance, baseParams *BaseParams) {
 	if s.ins != nil {
-		s.ins.DecRef()
+		s.ins.Release()
 	}
 	s.params = *baseParams
 	s.ins = &ins
@@ -187,7 +187,7 @@ func (s *Base) Terminate(ctx *core.Context) error {
 	if s.ins == nil {
 		return nil // This isn't an error in Terminate
 	}
-	s.ins.DecRef()
+	s.ins.Release()
 	s.ins = nil
 	return nil
 }

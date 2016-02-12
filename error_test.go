@@ -11,13 +11,13 @@ func TestPyError(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 		Reset(func() {
-			mdl.DecRef()
+			mdl.Release()
 		})
 
 		syntaxError, err := mdl.GetClass("SyntaxError")
 		So(err, ShouldBeNil)
 		Reset(func() {
-			syntaxError.DecRef()
+			syntaxError.Release()
 		})
 		Convey("applying isSyntaxError to SyntaxError should return true.", func() {
 			So(isSyntaxError(syntaxError.p), ShouldBeTrue)
@@ -26,7 +26,7 @@ func TestPyError(t *testing.T) {
 		environmentError, err := mdl.GetClass("EnvironmentError")
 		So(err, ShouldBeNil)
 		Reset(func() {
-			environmentError.DecRef()
+			environmentError.Release()
 		})
 		Convey("applying isSyntaxError to EnvironmentError should return false.", func() {
 			So(isSyntaxError(environmentError.p), ShouldBeFalse)
