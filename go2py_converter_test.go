@@ -88,7 +88,7 @@ func TestConvertGo2PyObject(t *testing.T) {
 		})
 
 		Reset(func() {
-			mdl.DecRef()
+			mdl.Release()
 		})
 	})
 }

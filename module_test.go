@@ -52,7 +52,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
 				Reset(func() {
-					ins.DecRef()
+					ins.Release()
 				})
 
 				Convey("And when call a logger function", func() {
@@ -75,7 +75,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 								So(err, ShouldBeNil)
 								So(ins2, ShouldNotBeNil)
 								Reset(func() {
-									ins2.DecRef()
+									ins2.Release()
 								})
 
 								Convey("And when call a logger function", func() {
@@ -103,7 +103,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(ins, ShouldNotBeNil)
 				Reset(func() {
-					ins.DecRef()
+					ins.Release()
 				})
 
 				actual, err := ins.Call("get_a")
@@ -118,7 +118,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 						So(err, ShouldBeNil)
 						So(ins2, ShouldNotBeNil)
 						Reset(func() {
-							ins2.DecRef()
+							ins2.Release()
 						})
 
 						actual2, err := ins2.Call("get_a")
@@ -149,7 +149,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Reset(func() {
-				class.DecRef()
+				class.Release()
 			})
 
 			Convey("Then process should get a string", func() {
@@ -187,7 +187,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Reset(func() {
-				class.DecRef()
+				class.Release()
 			})
 
 			Convey("Then process should get a string", func() {
@@ -216,13 +216,13 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 		Reset(func() {
-			mdl.DecRef()
+			mdl.Release()
 		})
 
 		Convey("When get a new test python instance with empty map", func() {
 			ins, err := mdl.NewInstance("PythonTest", nil, data.Map{})
 			Reset(func() {
-				ins.DecRef()
+				ins.Release()
 			})
 
 			Convey("Then process should get a python instance from the module", func() {
@@ -240,7 +240,7 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 			}
 			ins, err := mdl.NewInstance("PythonTestForKwd", nil, arg)
 			Reset(func() {
-				ins.DecRef()
+				ins.Release()
 			})
 
 			Convey("Then process should get instance and set values", func() {
@@ -259,7 +259,7 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 			}
 			ins, err := mdl.NewInstance("PythonTestForKwd", nil, arg)
 			Reset(func() {
-				ins.DecRef()
+				ins.Release()
 			})
 
 			Convey("Then process should get instance and set values", func() {
@@ -279,7 +279,7 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 			}
 			ins, err := mdl.NewInstance("PythonTestForKwd", []data.Value{arg}, kwdArg)
 			Reset(func() {
-				ins.DecRef()
+				ins.Release()
 			})
 
 			Convey("Then process should get instance and set values", func() {
