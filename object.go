@@ -5,7 +5,7 @@ package py
 */
 import "C"
 import (
-	"pfi/sensorbee/py/mainthread"
+	"gopkg.in/sensorbee/py.v0/mainthread"
 )
 
 // Object is a bind of `*C.PyObject`

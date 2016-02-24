@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ugorji/go/codec"
+	"gopkg.in/sensorbee/py.v0"
+	"gopkg.in/sensorbee/py.v0/mainthread"
+	"gopkg.in/sensorbee/sensorbee.v0/core"
+	"gopkg.in/sensorbee/sensorbee.v0/data"
 	"io"
 	"io/ioutil"
 	"os"
-	"pfi/sensorbee/py"
-	"pfi/sensorbee/py/mainthread"
-	"pfi/sensorbee/sensorbee/core"
-	"pfi/sensorbee/sensorbee/data"
 )
 
 // ErrAlreadyTerminated is occurred when called some python method after the

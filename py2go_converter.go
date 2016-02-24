@@ -51,7 +51,7 @@ int IsPyTypeUnicode(PyObject *o) {
 import "C"
 import (
 	"fmt"
-	"pfi/sensorbee/sensorbee/data"
+	"gopkg.in/sensorbee/sensorbee.v0/data"
 	"time"
 	"unsafe"
 )

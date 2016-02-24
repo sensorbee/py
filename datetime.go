@@ -23,7 +23,7 @@ PyObject* GetPyDateTime(int year, int month, int day, int hour, int minute,
 */
 import "C"
 import (
-	"pfi/sensorbee/py/mainthread"
+	"gopkg.in/sensorbee/py.v0/mainthread"
 	"time"
 )
 

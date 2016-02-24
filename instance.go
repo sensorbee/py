@@ -6,8 +6,8 @@ package py
 import "C"
 import (
 	"fmt"
-	"pfi/sensorbee/py/mainthread"
-	"pfi/sensorbee/sensorbee/data"
+	"gopkg.in/sensorbee/py.v0/mainthread"
+	"gopkg.in/sensorbee/sensorbee.v0/data"
 	"unsafe"
 )
 

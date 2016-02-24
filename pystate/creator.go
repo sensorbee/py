@@ -1,10 +1,10 @@
 package pystate
 
 import (
+	"gopkg.in/sensorbee/sensorbee.v0/bql/udf"
+	"gopkg.in/sensorbee/sensorbee.v0/core"
+	"gopkg.in/sensorbee/sensorbee.v0/data"
 	"io"
-	"pfi/sensorbee/sensorbee/bql/udf"
-	"pfi/sensorbee/sensorbee/core"
-	"pfi/sensorbee/sensorbee/data"
 )
 
 // Creator is used by BQL to create state as a UDS.

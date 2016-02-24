@@ -2,8 +2,8 @@ package py
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
-	"pfi/sensorbee/py/mainthread"
-	"pfi/sensorbee/sensorbee/data"
+	"gopkg.in/sensorbee/py.v0/mainthread"
+	"gopkg.in/sensorbee/sensorbee.v0/data"
 	"testing"
 )
 
