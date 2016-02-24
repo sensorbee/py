@@ -22,7 +22,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"pfi/sensorbee/py/mainthread"
+	"gopkg.in/sensorbee/py.v0/mainthread"
 	"strings"
 	"unicode"
 	"unsafe"

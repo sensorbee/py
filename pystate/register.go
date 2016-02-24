@@ -2,11 +2,11 @@ package pystate
 
 import (
 	"fmt"
-	"pfi/sensorbee/py"
-	"pfi/sensorbee/py/mainthread"
-	"pfi/sensorbee/sensorbee/bql/udf"
-	"pfi/sensorbee/sensorbee/core"
-	"pfi/sensorbee/sensorbee/data"
+	"gopkg.in/sensorbee/py.v0"
+	"gopkg.in/sensorbee/py.v0/mainthread"
+	"gopkg.in/sensorbee/sensorbee.v0/bql/udf"
+	"gopkg.in/sensorbee/sensorbee.v0/core"
+	"gopkg.in/sensorbee/sensorbee.v0/data"
 	"sync"
 )
 

@@ -126,7 +126,7 @@ When a pystate is set "write\_method" value, then the state is writable, and if 
 
 [TODO] need to discussion default writable specification.
 
-See SensorBee wiki: [Updating a UDS](https://github.pfidev.jp/sensorbee/sensorbee/wiki/How-to-write-%22stateful%22-User-Defined-Functions#updating-a-uds)
+See SensorBee wiki: [Writing Tuples to a UDS](https://github.com/sensorbee/docs/blob/3559bf6b0f204e5b3fc28fcb57c8e59f934e1e73/source/server_programming/go/states.rst#writing-tuples-to-a-uds)
 
 ## Default Register
 
@@ -138,7 +138,7 @@ User can add original type name pystate. In an application, write like:
 
 ```go
 import (
-    "pfi/sensorbee/py/pystate"
+    "gopkg.in/sensorbee/py.v0/pystate"
 )
 
 func init() {
@@ -182,7 +182,7 @@ In an application, write like:
 
 ```go
 import (
-    "pfi/sensorbee/py/pystate"
+    "gopkg.in/sensorbee/py.v0/pystate"
 )
 
 func init() {

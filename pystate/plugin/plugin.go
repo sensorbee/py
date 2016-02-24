@@ -1,8 +1,8 @@
 package plugin
 
 import (
-	"pfi/sensorbee/py/pystate"
-	"pfi/sensorbee/sensorbee/bql/udf"
+	"gopkg.in/sensorbee/py.v0/pystate"
+	"gopkg.in/sensorbee/sensorbee.v0/bql/udf"
 )
 
 func init() {
