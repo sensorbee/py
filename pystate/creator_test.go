@@ -218,3 +218,22 @@ func TestSaveLoadState(t *testing.T) {
 		})
 	})
 }
+
+func TestPyStateTerminate(t *testing.T) {
+	ctx := core.NewContext(nil)
+	Convey("Given a state set python instance", t, func() {
+		c := Creator{}
+		s, err := c.CreateState(ctx, data.Map{
+			"module_name": data.String("_test_creator_module"),
+			"class_name":  data.String("TestClassTerminateError"),
+		})
+		So(err, ShouldBeNil)
+		Convey("When call terminate", func() {
+			err := s.Terminate(ctx)
+			Convey("Then error should be occurred from python", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "ZeroDivisionError")
+			})
+		})
+	})
+}

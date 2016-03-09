@@ -77,6 +77,9 @@ class SampleClass(object):
 
     def save(self, filepath, params):
         # save params and output on filepath
+
+    def terminate(self):
+        # called when the state is terminated
 ```
 
 The above python class can be created as SharedState, BQL is written like:
@@ -127,6 +130,10 @@ When a pystate is set "write\_method" value, then the state is writable, and if 
 [TODO] need to discussion default writable specification.
 
 See SensorBee wiki: [Writing Tuples to a UDS](https://github.com/sensorbee/docs/blob/3559bf6b0f204e5b3fc28fcb57c8e59f934e1e73/source/server_programming/go/states.rst#writing-tuples-to-a-uds)
+
+### pystate terminate
+
+If need to release resources on `SampleClaee` in finalization, set `terminate` function. The `terminate` function is called when the state is removed from SensorBee's topology. The `terminate` function is optional and not called when the function is not implemented.
 
 ## Default Register
 
