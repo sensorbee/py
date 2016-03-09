@@ -187,9 +187,13 @@ func (s *Base) Terminate(ctx *core.Context) error {
 	if s.ins == nil {
 		return nil // This isn't an error in Terminate
 	}
+	var err error
+	if s.ins.CheckFunc("terminate") {
+		_, err = s.ins.Call("terminate")
+	}
 	s.ins.Release()
 	s.ins = nil
-	return nil
+	return err
 }
 
 // CheckTermination checks if the Base is already terminated. It returns nil

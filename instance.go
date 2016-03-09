@@ -37,6 +37,26 @@ func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 	return res.val, res.err
 }
 
+// CheckFunc checks if function having the name exists. It returns true when the
+// function is found.
+func (ins *ObjectInstance) CheckFunc(name string) bool {
+	ch := make(chan bool)
+	mainthread.Exec(func() {
+		if ins.p == nil {
+			ch <- false
+			return
+		}
+		f, err := getPyFunc(ins.p, name)
+		if err != nil {
+			ch <- false
+			return
+		}
+		defer f.decRef()
+		ch <- true
+	})
+	return <-ch
+}
+
 // CallDirect calls `name` function and return `PyObject` directly.
 // This method is suitable for getting the instance object that called method
 // returned.

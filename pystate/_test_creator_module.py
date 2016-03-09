@@ -64,3 +64,14 @@ class TestClass4(object):
     def save(self, filepath, *args, **kwargs):
         with open(filepath, 'w') as f:
             six.moves.cPickle.dump(self, f)
+
+
+class TestClassTerminateError(object):
+
+    @staticmethod
+    def create():
+        self = TestClassTerminateError()
+        return self
+
+    def terminate(self):
+        return 1 / 0  # cause ZeroDivisionError on purpose
