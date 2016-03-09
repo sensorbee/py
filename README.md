@@ -133,7 +133,7 @@ See SensorBee wiki: [Writing Tuples to a UDS](https://github.com/sensorbee/docs/
 
 ### pystate terminate
 
-If need to release resources on `SampleClaee` in finalization, set `terminate` function. The `terminate` function is called when the state is removed from SensorBee's topology. The `terminate` function is optional and not called when the function is not implemented.
+When a class provides `terminate` method, it'll be called in finalization so that the class can release resources it has allocated. More precisely, it'll be called when the state is dropped from SensorBee's topology. The `terminate` method is optional and will not be called if the class doesn't implement it.
 
 ## Default Register
 

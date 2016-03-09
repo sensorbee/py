@@ -37,7 +37,7 @@ func (ins *ObjectInstance) Call(name string, args ...data.Value) (data.Value,
 	return res.val, res.err
 }
 
-// CheckFunc checks that `name` function is exist or not, Return true when the
+// CheckFunc checks if function having the name exists. It returns true when the
 // function is found.
 func (ins *ObjectInstance) CheckFunc(name string) bool {
 	ch := make(chan bool)
