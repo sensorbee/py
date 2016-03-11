@@ -50,7 +50,7 @@ func newPyObj(v data.Value) (Object, error) {
 	case data.TypeNull:
 		pyobj = C.getPyNone()
 	default:
-		err = fmt.Errorf("not supported type in sensorbee/py: %s", v.Type())
+		err = fmt.Errorf("unsupported type in sensorbee/py: %s", v.Type())
 	}
 
 	if pyobj == nil && err == nil {

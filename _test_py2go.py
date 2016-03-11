@@ -71,3 +71,11 @@ def return_onetuple():
 
 def return_astuple():
     return 'a', {'key1': 1}, [1, 2]
+
+
+def return_object():
+    class FailureTest(object):
+        def __init__(self):
+            pass
+
+    return FailureTest()
