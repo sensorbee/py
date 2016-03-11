@@ -25,9 +25,6 @@ other *.go, for example "pydatetime.go"
 
 Currently py package library use pkg-config to link "Python.h". User needs to set up pkg-config and "python-2.7.pc".
 
-* [TODO] currently only support darwin and linux, need to support windows
-* [TODO] support python3
-
 ## Example to set up pkg-config (with pyenv)
 
 If user uses pyenv, "python-2.7.pc" would be installed at `~/.pyenv/versions/<version>/lib/pkgconfig`, and user can use this file.
@@ -43,7 +40,7 @@ ln -s ~/.pyenv/versions/<version>/lib/pkgconfig/python-2.7.pc /usr/local/lib/pkg
 When python is installed as static object (*.so),  error will be occurred on building Sensorbee. Please try to re-install Python with enabled shared.
 
 ```bash
-env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -v 2.7.9
+env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -v <version>
 ```
 
 # Default UDS/UDF
@@ -55,7 +52,7 @@ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -v 2.7.9
 ```python
 class SampleClass(object):
     @staticmethod
-    def create(arg1, arg2='arg2', arg3='arg3', **arg4):
+    def create(arg1, arg2="arg2", arg3="arg3", **arg4):
         self = SampleClass()
         # initialize
         return self
@@ -72,8 +69,9 @@ class SampleClass(object):
         # do something
 
     @staticmethod
-    def load(filepath, params):
+    def load(filepath, arg1):
         # load from filepath and set params
+        # return SampleClass constructor
 
     def save(self, filepath, params):
         # save params and output on filepath
@@ -86,15 +84,15 @@ The above python class can be created as SharedState, BQL is written like:
 
 ```sql
 CREATE STATE sample_module TYPE pystate
-    WITH module_path = 'lib', -- optional, default ''
-         module_name = 'sample_module', -- required
-         class_name = 'SampleClass',  -- required
-         write_method = 'write_method', -- optional
+    WITH module_path = "lib", -- optional, default ""
+         module_name = "sample_module", -- required
+         class_name = "SampleClass",  -- required
+         write_method = "write_method", -- optional
          -- rest parameters are used for initializing constructor arguments.
-         arg1 = 'arg1',
-         arg3 = 'arg3a',
+         arg1 = "arg1",
+         arg3 = "arg3a",
          new_arg1 = 1,
-         new_arg2 = '2'
+         new_arg2 = "2"
 ;
 ```
 
@@ -103,7 +101,7 @@ CREATE STATE sample_module TYPE pystate
 UDF query is written like:
 
 ```sql
-EVAL pystate_func('sample_module', 'sample_method', arg1, arg2, arg3)
+EVAL pystate_func("sample_module", "sample_method", arg1, arg2, arg3)
 ;
 ```
 
@@ -127,9 +125,23 @@ sm.sample_method(arg1, arg2, arg3)
 
 When a pystate is set "write\_method" value, then the state is writable, and if not set "write\_method" then SensorBee will return an error.
 
-[TODO] need to discussion default writable specification.
+See SensorBee document: [Writing Tuples to a UDS](http://sensorbee.readthedocs.org/en/latest/server_programming.html#writing-tuples-to-a-uds)
 
-See SensorBee wiki: [Writing Tuples to a UDS](https://github.com/sensorbee/docs/blob/3559bf6b0f204e5b3fc28fcb57c8e59f934e1e73/source/server_programming/go/states.rst#writing-tuples-to-a-uds)
+### save & load
+
+When `SAVE` BQL command is executed, then the pystate's `save` function is called. User can implement saving module code to write on `filepath` which is pass from SensorBee. SensorBee will save the module as state.
+
+```sql
+SAVE STATE sample_module;
+```
+
+When `LOAD` BQL command is executed, then the pystate's `load` function is called. User need to return python constructor and SensorBee loads the python object as state.
+
+```sql
+LOAD STATE sample_module TYPE pystate SET arg1="arg1";
+```
+
+More detail, see [Saving and Loading a UDS](http://sensorbee.readthedocs.org/en/latest/server_programming.html#saving-and-loading-a-uds)
 
 ### pystate terminate
 
@@ -159,14 +171,14 @@ Then user can use `TYPE my_uds` UDS, like:
 ```sql
 CREATE STATE sample_module TYPE org_uds
     WITH v1 = -1,
-         v2 = 'string'
+         v2 = "string"
 ;
 ```
 
 User can also use "pystate\_func" same as "pystate"
 
 ```sql
-EVAL pystate_func('sample_module', 'sample_method', arg1, arg2, arg3)
+EVAL pystate_func("sample_module", "sample_method", arg1, arg2, arg3)
 ;
 ```
 
@@ -213,6 +225,8 @@ import sample_module
 sample_module.sample_module_method(arg1, arg2)
 ```
 
-## Save and Load
+# Attention
 
-[TODO]
+* sensorbee/py supports only python2.x, not support 3.x
+* on windows OS, user need to customize cgo code to link between go and python.
+* To reload updated modules, need to re-run SensorBee. Python modules are imported when SensorBee setup to run, and cannot reload modifies python modules in SensorBee running.
