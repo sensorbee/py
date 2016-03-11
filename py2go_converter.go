@@ -126,6 +126,9 @@ func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 	}
 
 	t := C.GetTypeObject(o)
+	if t == nil {
+		return data.Null{}, fmt.Errorf("unsupported type in sensorbee/py (cannot detect python object type)")
+	}
 	tn := C.GoString(C.GetTypeName(t))
 	defer C.DecRefTypeObject(t)
 	return data.Null{}, fmt.Errorf("unsupported type in sensorbee/py: %v", tn)
