@@ -47,6 +47,18 @@ int IsPyTypeNone(PyObject *o) {
 int IsPyTypeUnicode(PyObject *o) {
   return PyUnicode_CheckExact(o);
 }
+
+PyTypeObject* GetTypeObject(PyObject *o) {
+  return (PyTypeObject*)PyObject_Type(o);
+}
+
+const char* GetTypeName(PyTypeObject *t) {
+  return t->tp_name;
+}
+
+void DecRefTypeObject(PyTypeObject *t) {
+  Py_DECREF(t);
+}
 */
 import "C"
 import (
@@ -113,7 +125,10 @@ func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 
 	}
 
-	return data.Null{}, fmt.Errorf("not supported python object")
+	t := C.GetTypeObject(o)
+	tn := C.GoString(C.GetTypeName(t))
+	defer C.DecRefTypeObject(t)
+	return data.Null{}, fmt.Errorf("unsupported type in sensorbee/py: %v", tn)
 }
 
 func fromPyArray(ls *C.PyObject) (data.Array, error) {

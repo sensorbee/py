@@ -55,3 +55,23 @@ func TestConvertPyObject2Go(t *testing.T) {
 		})
 	})
 }
+
+func TestUnsupportedPyObject2Go(t *testing.T) {
+	Convey("Given an initialized python py2go test module", t, func() {
+		mainthread.AppendSysPath("")
+
+		mdl, err := LoadModule("_test_py2go")
+		So(err, ShouldBeNil)
+		So(mdl, ShouldNotBeNil)
+
+		Convey("When call python function which returns unsupported object", func() {
+			ac, err := mdl.Call("return_object")
+
+			Convey("Then converter should return an error", func() {
+				So(ac, ShouldResemble, data.Null{})
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "FailureTest")
+			})
+		})
+	})
+}
