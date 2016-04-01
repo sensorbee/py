@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/sensorbee/py.svg?branch=master)](https://travis-ci.org/sensorbee/py)
+[![Coverage Status](https://coveralls.io/repos/github/sensorbee/py/badge.svg?branch=master)](https://coveralls.io/github/sensorbee/py?branch=master)
+
 py supports Python module and instance using `PyObject`.
 
 # Set up to link python
