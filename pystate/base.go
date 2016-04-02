@@ -64,10 +64,8 @@ func ExtractBaseParams(params data.Map, removeBaseKeys bool) (*BaseParams, error
 	bp := &BaseParams{}
 
 	if mp, err := params.Get(modulePath); err == nil {
-		if p, err := data.AsString(mp); err != nil {
+		if bp.ModulePath, err = data.AsString(mp); err != nil {
 			return nil, err
-		} else {
-			bp.ModulePath = p
 		}
 	}
 
@@ -157,7 +155,7 @@ func newPyInstance(createMethodName string, baseParams *BaseParams,
 	defer class.Release()
 
 	ins, err := class.CallDirect(createMethodName, args, kwdArgs)
-	return py.ObjectInstance{ins}, err
+	return py.ObjectInstance{Object: ins}, err
 }
 
 // LoadBase loads a new Base state.

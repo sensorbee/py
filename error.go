@@ -37,12 +37,12 @@ func init() {
 			return
 		}
 		defer traceback.decRef()
-		if formatException, err := getPyFunc(traceback.p, "format_exception"); err != nil {
+		formatException, err := getPyFunc(traceback.p, "format_exception")
+		if err != nil {
 			ch <- err
 			return
-		} else {
-			tracebackFormatExceptionFunc = formatException
 		}
+		tracebackFormatExceptionFunc = formatException
 
 		exceptions, err := loadModule("exceptions")
 		if err != nil {
@@ -52,12 +52,13 @@ func init() {
 		defer exceptions.decRef()
 		syntaxErrorCString := C.CString("SyntaxError")
 		defer C.free(unsafe.Pointer(syntaxErrorCString))
-		if syntaxError := C.PyObject_GetAttrString(exceptions.p, syntaxErrorCString); syntaxError == nil {
+		syntaxError := C.PyObject_GetAttrString(exceptions.p, syntaxErrorCString)
+		if syntaxError == nil {
 			ch <- errors.New("cannot load exceptions.SyntaxError")
 			return
-		} else {
-			syntaxErrorType.p = syntaxError
 		}
+		syntaxErrorType.p = syntaxError
+
 		ch <- nil
 	})
 
