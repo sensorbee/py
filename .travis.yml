@@ -1,0 +1,31 @@
+language: go
+go:
+  - 1.4.3
+  - 1.5.3
+  - 1.6
+
+sudo: true
+
+notifications:
+  email: false
+
+before_install:
+  - env
+  - lsb_release -a
+  - sudo apt-get -qq update
+  - sudo apt-get -qq install python-dev python-pip pkg-config
+  - sudo pip install six msgpack-python
+  - go version
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/pierrre/gotestcover
+
+install:
+  - go get -t -d -v ./...
+
+script:
+  - go build -v ./...
+  - gotestcover -v -covermode=count -coverprofile=.profile.cov -parallelpackages=1 ./...
+
+after_success:
+  - if [ "$TRAVIS_GO_VERSION" = "1.6" ]; then goveralls -coverprofile=.profile.cov -repotoken $COVERALLS_TOKEN; fi
