@@ -128,7 +128,7 @@ sm.sample_method(arg1, arg2, arg3)
 
 When a pystate is set "write\_method" value, then the state is writable, and if not set "write\_method" then SensorBee will return an error.
 
-See SensorBee document: [Writing Tuples to a UDS](http://sensorbee.readthedocs.org/en/latest/server_programming.html#writing-tuples-to-a-uds)
+See SensorBee document: [Writing Tuples to a UDS](http://docs.sensorbee.io/en/latest/server_programming.html#writing-tuples-to-a-uds)
 
 ### save & load
 
@@ -144,7 +144,7 @@ When `LOAD` BQL command is executed, then the pystate's `load` function is calle
 LOAD STATE sample_module TYPE pystate SET arg1="arg1";
 ```
 
-More detail, see [Saving and Loading a UDS](http://sensorbee.readthedocs.org/en/latest/server_programming.html#saving-and-loading-a-uds)
+More detail, see [Saving and Loading a UDS](http://docs.sensorbee.io/en/latest/server_programming.html#saving-and-loading-a-uds)
 
 ### pystate terminate
 
