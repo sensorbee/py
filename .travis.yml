@@ -1,13 +1,15 @@
 language: go
 go:
   - 1.4.3
-  - 1.5.3
-  - 1.6
+  - 1.5.4
+  - 1.6.2
 
 sudo: true
 
 notifications:
   email: false
+
+go_import_path: gopkg.in/sensorbee/py.v0
 
 before_install:
   - env
@@ -16,16 +18,20 @@ before_install:
   - sudo apt-get -qq install python-dev python-pip pkg-config
   - sudo pip install six msgpack-python
   - go version
+
+install:
+  - if [ "$TRAVIS_GO_VERSION" != "1.4.3" ]; then go get github.com/golang/lint/golint; fi
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/pierrre/gotestcover
-
-install:
   - go get -t -d -v ./...
+
+before_script:
+  - if [ "$TRAVIS_GO_VERSION" != "1.4.3" ]; then golint ./... | tee .golint.txt && test ! -s .golint.txt; fi
 
 script:
   - go build -v ./...
   - gotestcover -v -covermode=count -coverprofile=.profile.cov -parallelpackages=1 ./...
 
 after_success:
-  - if [ "$TRAVIS_GO_VERSION" = "1.6" ]; then goveralls -coverprofile=.profile.cov -repotoken $COVERALLS_TOKEN; fi
+  - if [ "$TRAVIS_GO_VERSION" = "1.6.2" ]; then goveralls -coverprofile=.profile.cov -repotoken $COVERALLS_TOKEN; fi
