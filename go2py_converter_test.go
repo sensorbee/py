@@ -27,7 +27,7 @@ func TestConvertGo2PyObject(t *testing.T) {
 				"string": argAndExpected{data.String("test"), "test"},
 				"int":    argAndExpected{data.Int(9), "9"},
 				"float":  argAndExpected{data.Float(0.9), "0.9"},
-				"byte":   argAndExpected{data.Blob([]byte("ABC")), "ABC"},
+				"byte":   argAndExpected{data.Blob([]byte("ABC")), "b'ABC'"},
 				"true":   argAndExpected{data.True, "True"},
 				"false":  argAndExpected{data.False, "False"},
 				"null":   argAndExpected{data.Null{}, "None"},

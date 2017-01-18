@@ -249,7 +249,7 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 
 				actual, err := ins.Call("confirm_init")
 				So(err, ShouldBeNil)
-				So(actual, ShouldEqual, "1_2_{'c': 3, 'd': 4}")
+				So(actual, ShouldBeIn, []string{"1_2_{'c': 3, 'd': 4}", "1_2_{'d': 4, 'c': 3}"})
 			})
 		})
 

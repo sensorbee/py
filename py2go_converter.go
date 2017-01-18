@@ -12,8 +12,8 @@ int IsPyTypeFalse(PyObject *o) {
   return o == Py_False;
 }
 
-int IsPyTypeInt(PyObject *o) {
-  return PyInt_CheckExact(o);
+int IsPyTypeLong(PyObject *o) {
+  return PyLong_CheckExact(o);
 }
 
 int IsPyTypeFloat(PyObject *o) {
@@ -24,8 +24,8 @@ int IsPyTypeByteArray(PyObject *o) {
   return PyByteArray_CheckExact(o);
 }
 
-int IsPyTypeString(PyObject *o) {
-  return PyString_CheckExact(o);
+int IsPyTypeBytes(PyObject *o) {
+  return PyBytes_CheckExact(o);
 }
 
 int IsPyTypeList(PyObject *o) {
@@ -76,8 +76,8 @@ func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 	case C.IsPyTypeFalse(o) > 0:
 		return data.Bool(false), nil
 
-	case C.IsPyTypeInt(o) > 0:
-		return data.Int(C.PyInt_AsLong(o)), nil
+	case C.IsPyTypeLong(o) > 0:
+		return data.Int(C.PyLong_AsLong(o)), nil
 
 	case C.IsPyTypeFloat(o) > 0:
 		return data.Float(C.PyFloat_AsDouble(o)), nil
@@ -85,28 +85,23 @@ func fromPyTypeObject(o *C.PyObject) (data.Value, error) {
 	case C.IsPyTypeByteArray(o) > 0:
 		bytePtr := C.PyByteArray_FromObject(o)
 		charPtr := C.PyByteArray_AsString(bytePtr)
-		l := C.PyByteArray_Size(o)
-		return data.Blob(C.GoBytes(unsafe.Pointer(charPtr), C.int(l))), nil
+		size := C.int(C.PyByteArray_Size(o))
+		return data.Blob(C.GoBytes(unsafe.Pointer(charPtr), size)), nil
 
-	case C.IsPyTypeString(o) > 0:
-		size := C.int(C.PyString_Size(o))
-		charPtr := C.PyString_AsString(o)
-		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), size))), nil
+	case C.IsPyTypeBytes(o) > 0:
+		charPtr := C.PyBytes_AsString(o)
+		size := C.int(C.PyBytes_Size(o))
+		return data.Blob(C.GoBytes(unsafe.Pointer(charPtr), size)), nil
 
 	case C.IsPyTypeUnicode(o) > 0:
 		// Use unicode string as UTF-8 in py because
 		// Go's source code is defined to be UTF-8 text and string literal is too.
-		utf8 := C.CString("UTF-8")
-		defer C.free(unsafe.Pointer(utf8))
-
-		strObj := C.PyUnicode_AsEncodedString(o, utf8, nil)
-		if strObj == nil {
+		var size C.Py_ssize_t
+		charPtr := C.PyUnicode_AsUTF8AndSize(o, &size)
+		if charPtr == nil {
 			return data.Null{}, getPyErr()
 		}
-		str := Object{p: strObj}
-		defer str.decRef()
-
-		return fromPyTypeObject(str.p)
+		return data.String(string(C.GoBytes(unsafe.Pointer(charPtr), C.int(size)))), nil
 
 	case isPyTypeDateTime(o):
 		return fromTimestamp(o), nil
@@ -156,7 +151,7 @@ func fromPyMap(o *C.PyObject) (data.Map, error) {
 
 	for C.int(C.PyDict_Next(o, &pos, &key, &value)) > 0 {
 		// data.Map's key is only allowed string or unicode
-		if C.IsPyTypeString(key) == 0 && C.IsPyTypeUnicode(key) == 0 {
+		if C.IsPyTypeBytes(key) == 0 && C.IsPyTypeUnicode(key) == 0 {
 			continue
 		}
 		k, _ := fromPyTypeObject(key)

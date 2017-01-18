@@ -13,6 +13,10 @@ void fetchPythonError(PyObject* excInfo)
   PyObject *type, *value, *traceback;
 
   PyErr_Fetch(&type, &value, &traceback);
+  PyErr_NormalizeException(&type, &value, &traceback);
+  if (traceback != NULL) {
+    PyException_SetTraceback(value, traceback);
+  }
   PyTuple_SetItem(excInfo, 0, idOrNone(type));
   PyTuple_SetItem(excInfo, 1, idOrNone(value));
   PyTuple_SetItem(excInfo, 2, idOrNone(traceback));
@@ -44,20 +48,7 @@ func init() {
 		}
 		tracebackFormatExceptionFunc = formatException
 
-		exceptions, err := loadModule("exceptions")
-		if err != nil {
-			ch <- err
-			return
-		}
-		defer exceptions.decRef()
-		syntaxErrorCString := C.CString("SyntaxError")
-		defer C.free(unsafe.Pointer(syntaxErrorCString))
-		syntaxError := C.PyObject_GetAttrString(exceptions.p, syntaxErrorCString)
-		if syntaxError == nil {
-			ch <- errors.New("cannot load exceptions.SyntaxError")
-			return
-		}
-		syntaxErrorType.p = syntaxError
+		syntaxErrorType.p = C.PyExc_SyntaxError
 
 		ch <- nil
 	})
@@ -152,7 +143,7 @@ func getPyErr() error {
 
 func extractLineFromFormattedErrorMessage(formatted Object, n C.Py_ssize_t) string {
 	line := C.PyList_GetItem(formatted.p, n)
-	return C.GoString(C.PyString_AsString(line))
+	return C.GoString(C.PyUnicode_AsUTF8(line))
 }
 
 // pyErr represents an exception of python.

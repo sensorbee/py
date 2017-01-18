@@ -6,8 +6,8 @@ import (
 )
 
 func TestPyError(t *testing.T) {
-	Convey("When importing exceptions module and extract SyntaxError type", t, func() {
-		mdl, err := LoadModule("exceptions")
+	Convey("When importing builtins module and extract SyntaxError type", t, func() {
+		mdl, err := LoadModule("builtins")
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 		Reset(func() {

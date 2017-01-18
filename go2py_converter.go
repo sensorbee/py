@@ -27,7 +27,7 @@ func newPyObj(v data.Value) (Object, error) {
 		pyobj = C.PyBool_FromLong(C.long(b))
 	case data.TypeInt:
 		i, _ := data.AsInt(v)
-		pyobj = C.PyInt_FromLong(C.long(i))
+		pyobj = C.PyLong_FromLong(C.long(i))
 	case data.TypeFloat:
 		f, _ := data.AsFloat(v)
 		pyobj = C.PyFloat_FromDouble(C.double(f))
@@ -37,7 +37,7 @@ func newPyObj(v data.Value) (Object, error) {
 	case data.TypeBlob:
 		b, _ := data.AsBlob(v)
 		cb := (*C.char)(unsafe.Pointer(&b[0]))
-		pyobj = C.PyByteArray_FromStringAndSize(cb, C.Py_ssize_t(len(b)))
+		pyobj = C.PyBytes_FromStringAndSize(cb, C.Py_ssize_t(len(b)))
 	case data.TypeTimestamp:
 		t, _ := data.AsTimestamp(v)
 		pyobj = getPyDateTime(t)
@@ -62,7 +62,7 @@ func newPyObj(v data.Value) (Object, error) {
 func newPyString(s string) *C.PyObject {
 	cs := C.CString(s)
 	defer C.free(unsafe.Pointer(cs))
-	return C.PyString_FromString(cs)
+	return C.PyUnicode_FromString(cs)
 }
 
 func newPyArray(a data.Array) (*C.PyObject, error) {

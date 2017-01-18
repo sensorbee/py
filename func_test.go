@@ -105,7 +105,7 @@ func TestPyFunc(t *testing.T) {
 			Convey("it should return an error.", func() {
 				So(err, ShouldNotBeNil)
 				So(ret2.p, ShouldBeNil)
-				So(err.Error(), ShouldContainSubstring, "__call__() takes exactly 2 arguments (1 given)")
+				So(err.Error(), ShouldContainSubstring, "__call__() missing 1 required positional argument")
 			})
 		})
 

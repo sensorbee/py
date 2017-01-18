@@ -27,7 +27,7 @@ def return_unicode():
 
 
 def return_bytearray():
-    return bytearray('abcdefg')
+    return bytearray(b'abcdefg')
 
 
 def return_array():
