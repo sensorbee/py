@@ -47,11 +47,11 @@ class PythonTest3():
         ins = PythonTest3()
         ins.a = a
         ins.b = b
-        ins.c = c
+        ins.c1 = c['v1']
         return ins
 
     def confirm(self):
-        return str(self.a) + '_' + str(self.b) + '_' + str(self.c)
+        return str(self.a) + '_' + str(self.b) + '_' + str(self.c1)
 
 
 class ChildClass(PythonTest3):
@@ -64,7 +64,10 @@ class PythonTestForKwd(object):
     def __init__(self, a, b=5, **c):
         self.a = a
         self.b = b
-        self.c = c
+        self.c = c['c'] if 'c' in c else ''
+        self.d = c['d'] if 'd' in c else ''
+        self.e = c['e'] if 'e' in c else ''
 
     def confirm_init(self):
-        return str(self.a) + '_' + str(self.b) + '_' + str(self.c)
+        return str(self.a) + '_' + str(self.b) + '_' + str(self.c) + '_' + \
+            str(self.d) + '_' + str(self.e)
