@@ -1,13 +1,14 @@
 package py
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestPyError(t *testing.T) {
 	Convey("When importing builtins module and extract SyntaxError type", t, func() {
-		mdl, err := LoadModule("builtins")
+		mdl, err := loadExceptionModule()
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 		Reset(func() {
