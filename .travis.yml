@@ -1,10 +1,28 @@
 language: go
-go:
-  - 1.4.3
-  - 1.5.4
-  - 1.6.2
 
-sudo: true
+matrix:
+  include:
+    - go: 1.4.3
+      env:
+        - PYTHON_VERSION=2.7
+    - go: 1.5.4
+      env:
+        - PYTHON_VERSION=2.7
+    - go: 1.6.4
+      env:
+        - CHECK_GOLINT=true
+        - PYTHON_VERSION=2.7
+    - go: 1.7.4
+      env:
+        - CHECK_GOLINT=true
+        - PYTHON_VERSION=2.7
+    - go: 1.7.4
+      env:
+        - CHECK_GOLINT=true
+        - PYTHON_VERSION=3.4
+
+sudo: required
+dist: trusty
 
 notifications:
   email: false
@@ -15,23 +33,38 @@ before_install:
   - env
   - lsb_release -a
   - sudo apt-get -qq update
-  - sudo apt-get -qq install python-dev python-pip pkg-config
-  - sudo pip install six msgpack-python
+  - if [ "$PYTHON_VERSION" != "2.7" ]; then
+      sudo apt-get -qq install python3-pip;
+      sudo pip3 install six;
+      python3 --version;
+    else
+      pip install six;
+      python --version;
+    fi
+  - sudo apt-get -qq install pkg-config
   - go version
 
 install:
-  - if [ "$TRAVIS_GO_VERSION" != "1.4.3" ]; then go get github.com/golang/lint/golint; fi
-  - go get github.com/mattn/goveralls
-  - go get golang.org/x/tools/cmd/cover
-  - go get github.com/pierrre/gotestcover
+  - if [ $CHECK_GOLINT ]; then go get github.com/golang/lint/golint; fi
+  - go get -a github.com/mattn/goveralls
+  - go get -a golang.org/x/tools/cmd/cover
+  - go get -a github.com/pierrre/gotestcover
   - go get -t -d -v ./...
 
 before_script:
-  - if [ "$TRAVIS_GO_VERSION" != "1.4.3" ]; then golint ./... | tee .golint.txt && test ! -s .golint.txt; fi
+  - if [ $CHECK_GOLINT ]; then golint ./... | tee .golint.txt && test ! -s .golint.txt; fi
 
 script:
-  - go build -v ./...
-  - gotestcover -v -covermode=count -coverprofile=.profile.cov -parallelpackages=1 ./...
+  - if [ "$PYTHON_VERSION" != "2.7" ]; then
+      go build -v --tags=py"$PYTHON_VERSION" ./...;
+    else
+      go build -v ./...;
+    fi
+  - if [ "$PYTHON_VERSION" != "2.7" ]; then
+      gotestcover -v -covermode=count -coverprofile=.profile.cov -parallelpackages=1 --tags=py"$PYTHON_VERSION" ./...;
+    else
+      gotestcover -v -covermode=count -coverprofile=.profile.cov -parallelpackages=1 ./...;
+    fi
 
 after_success:
-  - if [ "$TRAVIS_GO_VERSION" = "1.6.2" ]; then goveralls -coverprofile=.profile.cov -repotoken $COVERALLS_TOKEN; fi
+  - if [ "$TRAVIS_GO_VERSION" = "1.7.4" ]; then goveralls -coverprofile=.profile.cov -repotoken $COVERALLS_TOKEN; fi
