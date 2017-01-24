@@ -1,6 +1,6 @@
-// !py3.4
-// !py3.5
-// !py3.6
+// +build !py3.4
+// +build !py3.5
+// +build !py3.6
 
 package mainthread
 
