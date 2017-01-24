@@ -1,10 +1,11 @@
 package py
 
 import (
+	"testing"
+
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/sensorbee/py.v0/mainthread"
 	"gopkg.in/sensorbee/sensorbee.v0/data"
-	"testing"
 )
 
 func TestGetPyFuncError(t *testing.T) {
@@ -105,7 +106,8 @@ func TestPyFunc(t *testing.T) {
 			Convey("it should return an error.", func() {
 				So(err, ShouldNotBeNil)
 				So(ret2.p, ShouldBeNil)
-				So(err.Error(), ShouldContainSubstring, "__call__() takes exactly 2 arguments (1 given)")
+				So(err.Error(), ShouldContainSubstring, "TypeError:")
+				So(err.Error(), ShouldContainSubstring, "argument")
 			})
 		})
 

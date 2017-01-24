@@ -1,10 +1,11 @@
 package py
 
 import (
+	"testing"
+
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/sensorbee/py.v0/mainthread"
 	"gopkg.in/sensorbee/sensorbee.v0/data"
-	"testing"
 )
 
 func TestLoadModuleError(t *testing.T) {
@@ -177,7 +178,7 @@ func TestNewInstanceAndStateness(t *testing.T) {
 				ins := &ObjectInstance{obj}
 				actual, err := ins.Call("confirm")
 				So(err, ShouldBeNil)
-				So(actual, ShouldEqual, "55_5_{'v1': 'homhom'}")
+				So(actual, ShouldEqual, "55_5_homhom")
 			})
 		})
 
@@ -249,7 +250,7 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 
 				actual, err := ins.Call("confirm_init")
 				So(err, ShouldBeNil)
-				So(actual, ShouldEqual, "1_2_{'c': 3, 'd': 4}")
+				So(actual, ShouldEqual, "1_2_3_4_")
 			})
 		})
 
@@ -268,14 +269,14 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 
 				actual, err := ins.Call("confirm_init")
 				So(err, ShouldBeNil)
-				So(actual, ShouldEqual, "1_5_{}")
+				So(actual, ShouldEqual, "1_5___")
 			})
 		})
 
 		Convey("When get a new test python instance with named and non-named arguments mixed", func() {
 			arg := data.Int(1)
 			kwdArg := data.Map{
-				"v1": data.String("homhom"),
+				"e": data.String("homhom"),
 			}
 			ins, err := mdl.NewInstance("PythonTestForKwd", []data.Value{arg}, kwdArg)
 			Reset(func() {
@@ -288,7 +289,7 @@ func TestNewInstanceWithKeywordArgument(t *testing.T) {
 
 				actual, err := ins.Call("confirm_init")
 				So(err, ShouldBeNil)
-				So(actual, ShouldEqual, "1_5_{'v1': 'homhom'}")
+				So(actual, ShouldEqual, "1_5___homhom")
 			})
 		})
 

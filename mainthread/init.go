@@ -10,7 +10,6 @@ this package is executed before all other init functions in py package.
 package mainthread
 
 /*
-#cgo pkg-config: python-2.7
 #include "Python.h"
 */
 import "C"

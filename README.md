@@ -26,7 +26,7 @@ other *.go, for example "pydatetime.go"
 ```
 
 
-Currently py package library use pkg-config to link "Python.h". User needs to set up pkg-config and "python-2.7.pc".
+Currently py package library use pkg-config to link "Python.h". User needs to set up pkg-config and "python-2.7.pc" (or python-3.x.pc).
 
 ## Example to set up pkg-config (with pyenv)
 
@@ -45,6 +45,17 @@ When python is installed as static object (*.so),  error will be occurred on bui
 ```bash
 env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -v <version>
 ```
+
+## Use python3
+
+This py plugin supports Python2.7 on default. If build py plugin under Python3.x, build modules using `--tags` option, like:
+
+```sh
+build_sensorbee --only-generate-source=true
+go build --tags=py3.5 -o sensorbee sensorbee_main.go
+```
+
+Currently py package supports "py3.4", "py3.5" and "py3.6" tags. This support option using build constraints is beta version and it is possible to change in future.
 
 # Default UDS/UDF
 
@@ -230,6 +241,5 @@ sample_module.sample_module_method(arg1, arg2)
 
 # Attention
 
-* sensorbee/py supports only python2.x, not support 3.x
 * on windows OS, user need to customize cgo code to link between go and python.
 * To reload updated modules, need to re-run SensorBee. Python modules are imported when SensorBee setup to run, and cannot reload modifies python modules in SensorBee running.

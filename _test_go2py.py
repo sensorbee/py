@@ -5,6 +5,10 @@ def go2py_tostr(arg):
     return str(arg)
 
 
+def go2py_toutf8(arg):
+    return arg.decode('utf-8')
+
+
 def go2py_mapinmap(arg):
     ret = arg['string']
     ret += '_' + arg['map']['instr']

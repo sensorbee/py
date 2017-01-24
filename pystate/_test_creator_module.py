@@ -51,7 +51,7 @@ class TestClass4(object):
 
     @staticmethod
     def load(filepath, *args, **kwargs):
-        with open(filepath, 'r') as f:
+        with open(filepath, 'rb') as f:
             return six.moves.cPickle.load(f)
 
     def modify_params(self):
@@ -62,7 +62,7 @@ class TestClass4(object):
         return self.params
 
     def save(self, filepath, *args, **kwargs):
-        with open(filepath, 'w') as f:
+        with open(filepath, 'wb') as f:
             six.moves.cPickle.dump(self, f)
 
 

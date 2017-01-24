@@ -2,11 +2,12 @@ package py
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/sensorbee/py.v0/mainthread"
 	"gopkg.in/sensorbee/sensorbee.v0/data"
-	"testing"
-	"time"
 )
 
 func TestConvertGo2PyObject(t *testing.T) {
@@ -17,17 +18,15 @@ func TestConvertGo2PyObject(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(mdl, ShouldNotBeNil)
 
-		type argAndExpected struct {
-			arg      data.Value
-			expected string
-		}
-
 		Convey("When set an object", func() {
+			type argAndExpected struct {
+				arg      data.Value
+				expected string
+			}
 			values := map[string]argAndExpected{
 				"string": argAndExpected{data.String("test"), "test"},
 				"int":    argAndExpected{data.Int(9), "9"},
 				"float":  argAndExpected{data.Float(0.9), "0.9"},
-				"byte":   argAndExpected{data.Blob([]byte("ABC")), "ABC"},
 				"true":   argAndExpected{data.True, "True"},
 				"false":  argAndExpected{data.False, "False"},
 				"null":   argAndExpected{data.Null{}, "None"},
@@ -41,9 +40,11 @@ func TestConvertGo2PyObject(t *testing.T) {
 					So(actual, ShouldEqual, v.expected)
 				})
 			}
+		})
 
-			Convey("Then function should return string value: time", func() {
-				now := time.Now().UTC()
+		Convey("When set a time value", func() {
+			now := time.Now().UTC()
+			Convey("Then function should return time as string type", func() {
 				actual, err := mdl.Call("go2py_tostr", data.Timestamp(now))
 				So(err, ShouldBeNil)
 				retStr, err := data.AsString(actual)
@@ -51,6 +52,15 @@ func TestConvertGo2PyObject(t *testing.T) {
 				parsed, err := time.Parse("2006-01-02 15:04:05.999999999", retStr)
 				So(err, ShouldBeNil)
 				So(parsed, ShouldResemble, now.Truncate(time.Microsecond)) // Python's datetime has microseconds precision
+			})
+		})
+
+		Convey("When set a byte array", func() {
+			b := data.Blob([]byte("ABC"))
+			Convey("Then function should return string", func() {
+				actual, err := mdl.Call("go2py_toutf8", b)
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "ABC")
 			})
 		})
 

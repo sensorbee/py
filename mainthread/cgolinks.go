@@ -2,7 +2,7 @@
 // +build !py3.5
 // +build !py3.6
 
-package py
+package mainthread
 
 /*
 #cgo pkg-config: python-2.7
