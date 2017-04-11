@@ -64,6 +64,15 @@ func TestConvertGo2PyObject(t *testing.T) {
 			})
 		})
 
+		Convey("When set a empty byte array", func() {
+			b := data.Blob([]byte(""))
+			Convey("Then function should return empty string", func() {
+				actual, err := mdl.Call("go2py_toutf8", b)
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, "")
+			})
+		})
+
 		Convey("When set map in map and map in array", func() {
 			arg := data.Map{
 				"string": data.String("test"),

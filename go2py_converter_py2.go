@@ -33,8 +33,12 @@ func newPyObj(v data.Value) (Object, error) {
 		pyobj = newPyString(s)
 	case data.TypeBlob:
 		b, _ := data.AsBlob(v)
-		cb := (*C.char)(unsafe.Pointer(&b[0]))
-		pyobj = C.PyByteArray_FromStringAndSize(cb, C.Py_ssize_t(len(b)))
+		if len(b) == 0 {
+			pyobj = C.PyByteArray_FromStringAndSize(nil, 0)
+		} else {
+			cb := (*C.char)(unsafe.Pointer(&b[0]))
+			pyobj = C.PyByteArray_FromStringAndSize(cb, C.Py_ssize_t(len(b)))
+		}
 	case data.TypeTimestamp:
 		t, _ := data.AsTimestamp(v)
 		pyobj = getPyDateTime(t)
