@@ -2,10 +2,10 @@ language: go
 
 matrix:
   include:
-    - go: 1.8.x
+    - go: 1.11.x
       env:
         - PYTHON_VERSION=2.7
-    - go: 1.8.x
+    - go: 1.11.x
       env:
         - CHECK_GOLINT=true
         - PYTHON_VERSION=3.4  # Ubuntu14's python3 = 3.4.x
