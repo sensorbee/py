@@ -57,4 +57,4 @@ script:
     fi
 
 after_success:
-  - if [ $GOCOVERAGE ]; then goveralls -coverprofile=.profile.cov -repotoken $COVERALLS_TOKEN; fi
+  - if [ $GOCOVERAGE ]; then goveralls -coverprofile=.profile.cov -repotoken=$COVERALLS_TOKEN; fi
