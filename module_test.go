@@ -16,7 +16,8 @@ func TestLoadModuleError(t *testing.T) {
 			_, err := LoadModule("not_exist_module")
 			Convey("Then an error should be occurred", func() {
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldContainSubstring, "ImportError")
+				// Python2.7,<=3.5: ImportError, >=3.6: ModuleNotFoundError
+				So(err.Error(), ShouldContainSubstring, "Error")
 			})
 		})
 
