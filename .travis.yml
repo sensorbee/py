@@ -9,6 +9,7 @@ matrix:
       env:
         - CHECK_GOLINT=false  # tentatively off, golint not support go1.9
         - PYTHON_VERSION=3.4  # Ubuntu14's python3 = 3.4.x
+        - GOCOVERAGE=true
 
 sudo: required
 dist: trusty
@@ -56,4 +57,4 @@ script:
     fi
 
 after_success:
-  - if [ "$TRAVIS_GO_VERSION" = "1.7.4" ]; then goveralls -coverprofile=.profile.cov -repotoken $COVERALLS_TOKEN; fi
+  - if [ $GOCOVERAGE ]; then goveralls -coverprofile=.profile.cov -repotoken $COVERALLS_TOKEN; fi
